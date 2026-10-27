@@ -32,7 +32,7 @@ const oldMove=move;
 move=function(dx,dy){
 if(!state||battle)return;
 const z=state.zone,nx=state.x+dx,ny=state.y+dy;
-if(z==='forest'&&nx===19&&ny===10){if(!ready()){note('The coastal trail is closed until the Moonfall crypt is resolved.');return}if(!arc().chapter)chapter(1);go('tidehaven',1,6);chapter(2);return}
+if(z==='forest'&&nx===19&&ny===10){if(!ready()){note('The coastal trail is closed until the Moonfall crypt is resolved.');return}if(!arc().chapter)chapter(1);go('tidehaven',1,6);return}
 if(z==='tidehaven'){
 if(nx===0&&ny===6){go('forest',18,10);return}
 if(nx===19&&ny===6){go('sunshore',1,6);return}
@@ -63,7 +63,7 @@ sunshore:{x:15,y:5,type:'reefbreaker',chapter:3},
 saltcave:{x:15,y:7,type:'herald',chapter:7},
 abyssalheart:{x:16,y:6,type:'leviathan',chapter:8}
 };
-const b=targets[z];if(!b||a.bosses[z+'Visit']||a.chapter<b.chapter)return;
+const b=targets[z];if(!b||a.bosses[z+'Visit']||a.chapter<b.chapter)return;\nif(z==='sunshore'&&Object.keys(a.recruited).length<3){if(Math.abs(state.x-b.x)+Math.abs(state.y-b.y)<=2)note('Gather Brann, Selene and Pippa before confronting the Reefbreaker.');return}
 if(Math.abs(state.x-b.x)+Math.abs(state.y-b.y)<=1){a.bosses[z+'Visit']=true;startBattle(b.type)}
 }
 const oldTravel=travelTo;
@@ -129,7 +129,7 @@ scene(d?d.name:'Tidehaven',html);
 window.arc2Companion=companionTalk;window.arc2Side=sideTalk;
 function mayorTalk(){
 const a=arc();
-if(a.chapter===2){chapter(3);return}
+if(a.chapter===1){chapter(2);return}\nif(a.chapter===2){chapter(3);return}
 if(a.chapter===3){scene('Mayor Corven — The Broken Compact','<p>“Three strangers have been asking after our missing ships,” the mayor says. “The guardian, the swordswoman, the singer. If you wish to help us, take them to Sunshore and defeat the Reefbreaker that stalks our fishermen.”</p><p><b>Goal:</b> Recruit Brann, Selene and Pippa, then defeat the Reefbreaker.</p>');return}
 if(a.chapter===4&&!a.choices.festival){
 scene('Chapter XI — The Festival of Borrowed Names','<p>The mayor holds a ledger full of names crossed out in seawater. “If I publish this, the town may riot. If I burn it, the dead vanish again.”</p><p>Pippa begs for the truth. Brann asks whether the living can bear it. Selene says a hidden wound never heals.</p><button onclick="arc2Festival(\'reveal\')">Reveal the ledger</button><button onclick="arc2Festival(\'protect\')">Protect the town for now</button>');return}
