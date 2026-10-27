@@ -1103,4 +1103,84 @@ move=function(dx,dy){mapMoveBase(dx,dy);if(state){trackVisit();autoSave()}};
 const mapNewGameBase=newGame;
 newGame=function(){mapNewGameBase();trackVisit();autoSave()};
 render();
+</script><script>
+/* Multiple opponents share the turn clock; the primary enemy remains compatible with legacy UI. */
+function livingEnemies(){return battle?.enemies?.filter(e=>e.hp>0)|| (battle?.enemy?.hp>0?[battle.enemy]:[])}
+function selectedEnemy(){const enemies=livingEnemies();return enemies.find(e=>e.id===battle?.selectedEnemyId)||enemies[0]}
+function selectEnemy(id){if(!battle)return;battle.selectedEnemyId=id;render()}
+const multiStartBase=startBattle;
+startBattle=function(type){
+multiStartBase(type);
+if(!battle)return;
+const first=battle.enemy;
+first.id='enemy';first.clock=10000/first.spd;
+const countEnemies=['boss','cryptsovereign'].includes(type)?1:1+Math.floor(Math.random()*3);
+battle.enemies=[first];
+for(let i=1;i<countEnemies;i++){
+let e;
+if(type==='golem')e={...first,hp:first.maxhp,maxhp:first.maxhp};
+else e=enemy(['slime','wolf','bandit'][Math.floor(Math.random()*3)]);
+e.id='enemy'+i;e.clock=10000/e.spd;
+battle.enemies.push(e);battle.clocks[e.id]=e.clock;
+}
+battle.selectedEnemyId=first.id;
+render();
+};
+function applyPoisonTicks(actor){
+if(!battle)return;
+if(actor.id==='hero'||actor.id.startsWith('enemy')){
+for(const e of livingEnemies()){
+if(!e.poisonStacks?.length)continue;
+let damage=0;
+e.poisonStacks=e.poisonStacks.filter(t=>{damage+=20;t.remaining--;return t.remaining>0});
+e.hp=Math.max(0,e.hp-damage);
+note(e.name+' takes '+damage+' poison damage.');
+}
+}
+}
+function poisonEnemy(e){e.poisonStacks||=[];e.poisonStacks.push({remaining:5});note(e.name+' gains poison (5 turns).')}
+function syncBattlePrimary(){
+if(!battle)return;
+const active=selectedEnemy();
+if(active){battle.enemy=active;battle.selectedEnemyId=active.id}
+}
+const multiVictoryBase=victory;
+function finishEnemyWave(){
+if(!battle)return;
+const remaining=livingEnemies();
+if(remaining.length){syncBattlePrimary();return false}
+const defeated=battle.enemies||[battle.enemy];
+battle.enemy=defeated[0];battle.enemy.hp=0;
+multiVictoryBase();return true;
+}
+nextTurn=function(){
+if(!battle)return;
+if(finishEnemyWave())return;
+if(!members().some(p=>p.hp>0)){defeat();return}
+const alive=[...members().filter(p=>p.hp>0),...livingEnemies()];
+for(const p of alive)if(!Number.isFinite(battle.clocks[p.id]))battle.clocks[p.id]=10000/(p.id.startsWith('enemy')?p.spd:Math.max(1,stats(p).spd));
+const actor=alive.reduce((a,b)=>battle.clocks[a.id]<=battle.clocks[b.id]?a:b);
+const time=battle.clocks[actor.id];
+Object.keys(battle.clocks).forEach(k=>battle.clocks[k]-=time);
+battle.turn=actor.id;
+battle.clocks[actor.id]=10000/(actor.id.startsWith('enemy')?actor.spd:Math.max(1,stats(actor).spd));
+if(actor.id.startsWith('enemy')){
+applyPoisonTicks(actor);if(finishEnemyWave())return;
+if(actor.hp>0){const targets=members().filter(p=>p.hp>0);if(targets.length){const t=targets[Math.floor(Math.random()*targets.length)];hit(actor,t,1);note(actor.name+' attacks '+t.name+'.')}}
+nextTurn();return;
+}
+applyPoisonTicks(actor);if(finishEnemyWave())return;
+render();
+};
+const multiRenderBase=render;
+render=function(){
+if(!state)return;
+if(battle)syncBattlePrimary();
+multiRenderBase();
+if(!battle)return;
+const root=document.getElementById('combatants');
+if(root){const list=livingEnemies().map(e=>'<button onclick="selectEnemy(\''+e.id+'\')" '+(battle.selectedEnemyId===e.id?'style="border:2px solid gold"':'')+'>'+e.name+' '+e.hp+'/'+e.maxhp+' HP '+(e.poisonStacks?.length?'☠ '+e.poisonStacks.length:'')+'</button>').join('');
+root.innerHTML+='<div class="enemyTargetList"><b>Enemies: choose a target</b><div>'+list+'</div></div>';
+}
+};
 </script></body></html>
