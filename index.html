@@ -896,4 +896,12 @@ const keys=Object.keys(it.substats),unused=EQUIP_KEYS.filter(k=>!keys.includes(k
 let k;if(it.upgrade%3===0&&unused.length){k=unused[Math.floor(Math.random()*unused.length)];it.substats[k]=EQUIP_BASE[k]*(EQUIP_RARITIES.indexOf(it.rarity)+1)}
 else{k=keys[Math.floor(Math.random()*keys.length)];it.substats[k]+=EQUIP_BASE[k]*(it.upgrade%3===0?2:1)}
 note(it.name+' enhanced to +'+it.upgrade);render();autoSave()}
+</script><script>
+function expPlan(p,id,qty){setupProgress(p);const offered=EXP_VALUES[id]*qty;let level=p.level,exp=p.exp,remaining=offered;while(level<p.levelCap&&level<100&&remaining>0){const need=level*70-exp;if(remaining<need){exp+=remaining;remaining=0;break}remaining-=need;level++;exp=0}return {offered,level,wasted:level>=p.levelCap?remaining:0}}
+useExpItem=function(pid,id){if(!state||battle||!EXP_VALUES[id])return;const p=allCharacters().find(p=>p.id===pid);if(!p)return;
+const qty=Number(prompt('Quantity of '+items[id].name+'? Owned: '+count(id),'1'));if(!Number.isInteger(qty)||qty<1||qty>count(id))return;
+if(p.level>=p.levelCap){alert('Ascend before using EXP.');return}
+const v=expPlan(p,id,qty);
+const message='EXP gained: '+v.offered+'; projected level '+v.level+' / '+p.levelCap+(v.wasted?'; WARNING: '+v.wasted+' EXP will be wasted!':'; no EXP overflow')+'. Confirm consumption?';
+if(!confirm(message))return;consume(id,qty);levelCharacter(p,v.offered);render();autoSave()};
 </script></body></html>
