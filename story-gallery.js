@@ -41,13 +41,18 @@ const petals=Array.from({length:15},(_,i)=>'<ellipse cx="'+((i*97+31)%960)+'" cy
 const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="'+sky+'"/><stop offset="1" stop-color="#a56f82"/></linearGradient><radialGradient id="glow"><stop stop-color="'+moon+'" stop-opacity=".55"/><stop offset="1" stop-color="'+moon+'" stop-opacity="0"/></radialGradient></defs><rect width="960" height="540" fill="url(#sky)"/>'+stars+'<circle cx="740" cy="140" r="165" fill="url(#glow)"/><circle cx="740" cy="140" r="65" fill="'+moon+'"/>'+scenery+'<path d="M0 452Q230 420 480 456T960 446V540H0Z" fill="#102943" opacity=".7"/>'+characters+petals+'<rect y="450" width="960" height="90" fill="#09192c" opacity=".75"/><text x="480" y="488" text-anchor="middle" fill="#ffe8bd" font-family="Georgia,serif" font-size="28">'+safe(entry.name).replace(/&/g,'&amp;')+'</text><text x="480" y="517" text-anchor="middle" fill="#d9e8f7" font-family="Georgia,serif" font-size="15">ELARIA · ECHOES OF THE FALLEN STAR</text></svg>';
 return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
+/* Prefer the generated anime CG image files; retain SVG art as an offline fallback. */
+const CG_BASE='assets/cg/';
+function artSource(entry){return CG_BASE+entry.id+'.webp'}
+function artImg(entry){return '<img src="'+artSource(entry)+'" data-fallback="'+sceneArt(entry)+'" onerror="this.onerror=null;this.src=this.dataset.fallback" alt="'+safe(entry.name)+'">'}
 window.elariaCGArt=sceneArt;
+window.elariaCGImage=artSource;
 let filter='All';
 function gallery(){
 const got=unlocked(),list=entries.filter(e=>(filter==='All'||e.category===filter));
 let overlay=document.getElementById('elariaGallery');
 if(!overlay){overlay=document.createElement('div');overlay.id='elariaGallery';overlay.className='elaria-screen';document.body.appendChild(overlay)}
-overlay.innerHTML='<div class="elaria-gallery-panel"><div class="cg-toolbar"><h2>✦ Memory Gallery</h2><button onclick="elariaCloseGallery()">Close</button></div><p>Collected '+entries.filter(e=>got[e.id]).length+' / '+entries.length+' illustrated memories. Unlocked scenes remain in the gallery even after starting a new adventure.</p><div class="cg-filters">'+['All','Main Story','Side Story','Romance'].map(f=>'<button class="'+(filter===f?'active':'')+'" onclick="elariaGalleryFilter(\''+f+'\')">'+f+'</button>').join('')+'</div><div class="cg-grid">'+list.map(e=>'<button class="cg-card" '+(got[e.id]?'onclick="elariaShowCG(\''+e.id+'\')"':'disabled')+'>'+(got[e.id]?'<img src="'+sceneArt(e)+'" alt="'+safe(e.name)+'">':'<div class="cg-locked">✦<small>Locked Memory</small></div>')+'<span>'+safe(got[e.id]?e.name:'???')+'</span></button>').join('')+'</div></div>';
+overlay.innerHTML='<div class="elaria-gallery-panel"><div class="cg-toolbar"><h2>✦ Memory Gallery</h2><button onclick="elariaCloseGallery()">Close</button></div><p>Collected '+entries.filter(e=>got[e.id]).length+' / '+entries.length+' illustrated memories. Unlocked scenes remain in the gallery even after starting a new adventure.</p><div class="cg-filters">'+['All','Main Story','Side Story','Romance'].map(f=>'<button class="'+(filter===f?'active':'')+'" onclick="elariaGalleryFilter(\''+f+'\')">'+f+'</button>').join('')+'</div><div class="cg-grid">'+list.map(e=>'<button class="cg-card" '+(got[e.id]?'onclick="elariaShowCG(\''+e.id+'\')"':'disabled')+'>'+(got[e.id]?artImg(e):'<div class="cg-locked">✦<small>Locked Memory</small></div>')+'<span>'+safe(got[e.id]?e.name:'???')+'</span></button>').join('')+'</div></div>';
 }
 window.elariaGalleryFilter=f=>{filter=f;gallery()};
 window.elariaCloseGallery=()=>document.getElementById('elariaGallery')?.remove();
