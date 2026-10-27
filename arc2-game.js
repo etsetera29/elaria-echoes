@@ -48,7 +48,7 @@ if(nx===19&&ny===6){if(arc().chapter<7||!arc().bosses.heraldDefeated){note('The 
 }
 if(z==='abyssalheart'&&nx===0&&ny===6){go('saltcave',18,6);return}
 if(NEW_ZONES.includes(z)){
-if(nx<1||nx>18||ny<1||ny>11)return;
+if(nx<1||nx>18||ny<1||ny>11||walls(nx,ny))return;
 state.x=nx;state.y=ny;
 checkBossContact();
 if(!battle&&z!=='tidehaven')roamMobs();
