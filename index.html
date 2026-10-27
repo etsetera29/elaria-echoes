@@ -769,7 +769,7 @@ render();autoSave();
 }
 function enterCrypt(zone,x,y){
 state.zone=zone;state.x=x;state.y=y;
-if(zone==='cryptDepths')state.flags.cryptDefeatedThisVisit=false;
+if(zone==='cryptDepths'){state.flags.cryptDefeatedThisVisit=false;if(!state.flags.cryptFirstVictory&&state.flags.cryptChapter<7){state.flags.cryptChapter=7;modal('<h2>Chapter VII: The Door Beneath the World</h2><p>The deepest crypt bears the names of every soul lost when Elaria fell. The Echo Sovereign calls from its throne: “I kept them alive by keeping them here.”</p><p>Kael recognizes the king’s seal. Lilia hears thousands of voices trapped in a single note. Seren whispers that her sister is among them.</p><p>Break the crown and confront the Sovereign.</p><button onclick="closeModal()">Face the Sovereign</button>')}}
 render();autoSave();
 }
 const cryptMoveBase=move;
