@@ -98,6 +98,13 @@ baseRender();
 let panel=document.getElementById('arc2Potions');
 if(!panel){panel=document.createElement('section');panel.id='arc2Potions';document.getElementById('party').after(panel)}
 panel.innerHTML='<h4>🧪 Coastal Remedies</h4><p>Consumables apply to your hero. Guardian and Stormstep brews last until the next battle ends.</p>'+Object.entries(A.potions).map(([id,p])=>'<button onclick="arc2UsePotion(\''+id+'\')" '+(battle||count(id)<1?'disabled':'')+'>'+p.name+' ×'+count(id)+' — '+p.description+'</button>').join('');
+let battleInfo=document.getElementById('arc2BattleDetails');
+if(!battleInfo){battleInfo=document.createElement('section');battleInfo.id='arc2BattleDetails';document.getElementById('combatants').after(battleInfo)}
+if(battle){
+const opponent=battle.enemy,hero=state.hero;
+const special=battle.arc2Type&&A.enemies[battle.arc2Type];
+battleInfo.innerHTML='<div class="arc2-battle-header">'+(special?'<span class="arc2-enemy-icon">'+special.icon+'</span><div><b>'+special.name+'</b><small> Tidebound encounter</small></div>':'<span>⚔️ Party formation</span>')+'</div><div class="arc2-party-icons">'+members().map(p=>'<span title="'+p.cl+'">'+(p.cl==='Guardian'?'🛡️':p.cl==='Duelist'?'⚔️':p.cl==='Idol'?'🎤':p.cl==='Witch'?'🧙':p.cl==='Gunner'?'🔫':p.cl==='Assassin'?'🗡️':'✨')+' '+p.name+' '+p.hp+' HP</span>').join('')+'</div>';
+}else battleInfo.innerHTML='';
 if(battle){
 const actor=members().find(m=>m.id===battle.turn),root=document.getElementById('battleActions');
 if(actor&&root&&['Guardian','Duelist','Idol'].includes(actor.cl)){
@@ -108,7 +115,7 @@ if(buttons[1])buttons[1].textContent=actor.cl==='Guardian'?'Breakwater Wall (1 S
 };
 const baseVictory=victory;
 victory=function(){const active=battle?.arc2Type;baseVictory();
-if(active&&state){for(const p of allCharacters()){p.guardDraught=false;p.swiftBrew=false;p.guardBarrier=0;p.idolInspiration=0}render();autoSave()}
+if(state){for(const p of allCharacters()){p.guardDraught=false;p.swiftBrew=false;p.guardBarrier=0;p.idolInspiration=0}render();autoSave()}
 };
 const baseDefeat=defeat;
 defeat=function(){baseDefeat();if(state){for(const p of allCharacters()){p.guardDraught=false;p.swiftBrew=false;p.guardBarrier=0;p.idolInspiration=0}}};
