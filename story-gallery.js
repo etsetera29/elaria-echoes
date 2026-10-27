@@ -43,7 +43,7 @@ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
 /* Prefer the generated anime CG image files; retain SVG art as an offline fallback. */
 const CG_BASE='assets/cg/';
-function artSource(entry){return CG_BASE+entry.id+'.webp'}
+function artSource(entry){return CG_BASE+entry.id+'.svg'}
 function artImg(entry){return '<img src="'+artSource(entry)+'" data-fallback="'+sceneArt(entry)+'" onerror="this.onerror=null;this.src=this.dataset.fallback" alt="'+safe(entry.name)+'">'}
 window.elariaCGArt=sceneArt;
 window.elariaCGImage=artSource;
