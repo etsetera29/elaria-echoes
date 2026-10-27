@@ -50,8 +50,8 @@ if(z==='abyssalheart'&&nx===0&&ny===6){go('saltcave',18,6);return}
 if(NEW_ZONES.includes(z)){
 if(nx<1||nx>18||ny<1||ny>11)return;
 state.x=nx;state.y=ny;
-if(z!=='tidehaven')roamMobs();
-if(!battle)checkBossContact();
+checkBossContact();
+if(!battle&&z!=='tidehaven')roamMobs();
 render();autoSave();return;
 }
 oldMove(dx,dy);
@@ -229,6 +229,7 @@ if(Math.random()<.26&&t!=='leviathan'){const gear=Object.keys(A.gear);gain(gear[
 if(type==='reefbreaker'){state.inv.reefcrest=(state.inv.reefcrest||0)+2;if(a.chapter===3){chapter(4)}}
 if(type==='herald'){a.bosses.heraldDefeated=true;state.inv.abyssfang=(state.inv.abyssfang||0)+3;note('The Herald falls. The drowned gate opens.')}
 if(type==='leviathan'){
+a.bosses.leviathanDefeated=true;
 const cores=4+Math.floor(Math.random()*4);state.inv.leviathancore=(state.inv.leviathancore||0)+cores;
 if(a.chapter===8&&!a.choices.ending)finale();
 }
@@ -245,7 +246,7 @@ function finale(){
 scene('Chapter XV — The Tide That Remembers','<p>The Leviathan collapses into a sea of stars. Every stolen name rises around you, a constellation of possible lives. The voice that sounds like your own finally speaks clearly: “I did not come to save this timeline. I came to see if you could.”</p><p>Brann braces the collapsing cathedral. Selene holds back the drowning current. Pippa sings every name she can remember. Beyond the waves, another you reaches toward the same light.</p><p>The sea offers two mercies. Release every memory to the world, with all its grief and truth. Or bind them to the lighthouse, where no one can erase them again, but no one can fully carry them home.</p><button onclick="arc2End(\'release\')">Release the memories to the living</button><button onclick="arc2End(\'archive\')">Preserve them within the lighthouse</button>');
 }
 window.arc2End=function(choice){
-const a=arc();if(!a||a.chapter!==8||a.choices.ending)return;
+const a=arc();if(!a||a.chapter!==8||!a.bosses.leviathanDefeated||a.choices.ending)return;
 a.choices.ending=choice;state.gold+=2200;state.inv.leviathancore=(state.inv.leviathancore||0)+12;
 const ending=choice==='release'?
 'Every household in Tidehaven remembers. Some embrace long-lost names; others mourn a second time. Mayor Corven opens the registry to all. The harbor’s bells ring at sunrise without a hand to move them.':
