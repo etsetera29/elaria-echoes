@@ -31,3 +31,182 @@
 @keyframes chibi-hit{0%,100%{transform:translateX(0)}50%{transform:translateX(-7px) rotate(-6deg)}}
 @media(max-width:600px){#combatStage .fighter .combat-chibi{width:65px;height:100px}.story-chibi{width:74px;height:95px}.bond-scene-hero .story-chibi{width:90px;height:110px}}
 @media(prefers-reduced-motion:reduce){.elaria-chibi *,#combatStage .fighter.current .chibi-bob{animation:none!important}}
+
+
+/* Persistent combat sprite layer
+   Keeps animated characters mounted even when game.html redraws the combat HUD. */
+.elaria-chibi-stage{position:relative;display:flow-root;isolation:isolate;width:100%;max-width:100%;overflow:visible}
+.elaria-chibi-stage #combatStage .stage-party .fighter,
+.elaria-chibi-stage #combatStage .stage-enemy .fighter{visibility:hidden!important}
+.elaria-chibi-stage .elaria-persistent-chibis{
+  position:absolute;inset:12px 0 16px;z-index:5;overflow:hidden;
+  pointer-events:none;isolation:isolate;
+}
+.elaria-persistent-chibis .chibi-combat-party,
+.elaria-persistent-chibis .chibi-combat-foes{
+  position:absolute;bottom:13px;display:flex;align-items:flex-end;justify-content:center;
+  min-width:0;gap:clamp(2px,.65vw,10px);
+}
+.elaria-persistent-chibis .chibi-combat-party{left:2%;width:64%;justify-content:space-evenly}
+.elaria-persistent-chibis .chibi-combat-foes{right:2%;width:31%;justify-content:center}
+.elaria-persistent-chibis .elaria-chibi-avatar{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-end;flex:0 1 125px;
+  width:clamp(55px,10vw,125px);max-width:125px;
+  transform-origin:50% 92%;
+  animation:elariaChibiBattleIdle 1.5s ease-in-out infinite;
+  animation-delay:var(--chibi-delay,0s);
+  filter:drop-shadow(0 8px 4px #050c23ac);
+  transition:opacity .25s,filter .25s;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.enemy-chibi{
+  flex:0 1 150px;width:clamp(70px,13vw,150px);max-width:150px;
+  animation-duration:1.85s;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar svg{
+  width:100%;height:auto;aspect-ratio:124/164;
+  display:block;overflow:visible;
+  filter:drop-shadow(0 4px 6px #06102baa);
+}
+.elaria-persistent-chibis .elaria-chibi-avatar .chibi-bob{
+  transform-box:view-box;transform-origin:62px 135px;
+  animation:elariaChibiBattleBreathe 1.18s ease-in-out infinite;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar .chibi-head{
+  transform-box:view-box;transform-origin:63px 96px;
+  animation:elariaChibiBattleHead 2.4s ease-in-out infinite;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar .chibi-arm{
+  transform-box:view-box;transform-origin:86px 102px;
+  animation:elariaChibiBattleArm 1.52s ease-in-out infinite;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar .chibi-eyes{
+  transform-box:view-box;transform-origin:62px 65px;
+  animation:chibi-blink 3.7s steps(1,end) infinite;
+}
+.elaria-persistent-chibis .chibi-name{
+  text-align:center;font-size:clamp(9px,1.15vw,12px);font-weight:700;
+  line-height:1.1;color:#ffeccc;text-shadow:0 1px 4px #040917,0 0 4px #040917;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:2px 3px;margin-top:-3px;
+}
+.elaria-persistent-chibis .chibi-health{
+  display:block;width:80%;height:5px;background:#3d2b44;border-radius:12px;
+  margin:3px 0 0;overflow:hidden;border:1px solid #b3a3aa7a;
+}
+.elaria-persistent-chibis .chibi-health span{
+  display:block;height:100%;background:linear-gradient(90deg,#36bd90,#b6f4bd);
+  transition:width .25s linear;
+}
+.elaria-persistent-chibis .enemy-chibi .chibi-health span{
+  background:linear-gradient(90deg,#c34e5f,#ff9690);
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.current{
+  filter:drop-shadow(0 0 10px #fff1aa) drop-shadow(0 7px 4px #080e269e);
+  animation:elariaChibiBattleActive .66s ease-in-out infinite;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.current:before{
+  content:'✦';position:absolute;top:-16px;left:50%;color:#fff2ab;font-size:20px;
+  text-shadow:0 0 12px #ffdf82;
+  animation:elariaChibiSelected 1s ease-in-out infinite;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.defeated{
+  opacity:.24;filter:grayscale(1) drop-shadow(0 5px 4px #070f1c);
+  animation:none;transform:rotate(12deg);
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.chibi-striking{
+  z-index:9;
+  animation:elariaChibiLunge .62s cubic-bezier(.25,.7,.32,1) 1!important;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.enemy-chibi.chibi-striking{
+  animation-name:elariaChibiEnemyLunge!important;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.chibi-casting{
+  z-index:9;
+  animation:elariaChibiCast .78s ease-out 1!important;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.chibi-casting:after{
+  content:'✧';position:absolute;left:72%;top:19%;font-size:34px;color:#fbd7ff;
+  text-shadow:0 0 14px #bfaaff,0 0 35px #e9d9ff;
+  animation:elariaChibiMagic .78s ease-out 1;
+}
+.elaria-persistent-chibis .elaria-chibi-avatar.chibi-hit-react{
+  animation:elariaChibiRecoil .5s ease-out 1!important;
+  filter:brightness(1.7) drop-shadow(0 0 10px #ff9aa7);
+}
+@keyframes elariaChibiBattleIdle{
+  0%,100%{transform:translateY(0) rotate(-2deg)}
+  25%{transform:translateY(-5px) rotate(1deg)}
+  50%{transform:translateY(-11px) rotate(2deg)}
+  75%{transform:translateY(-5px) rotate(-1deg)}
+}
+@keyframes elariaChibiBattleActive{
+  0%,100%{transform:translateY(0) scale(1.02)}
+  50%{transform:translateY(-14px) scale(1.07)}
+}
+@keyframes elariaChibiBattleBreathe{
+  0%,100%{transform:scaleY(1)}
+  50%{transform:scaleY(1.044) translateY(-2px)}
+}
+@keyframes elariaChibiBattleHead{
+  0%,100%{transform:rotate(-5deg)}
+  50%{transform:rotate(6deg) translateY(-2px)}
+}
+@keyframes elariaChibiBattleArm{
+  0%,100%{transform:rotate(-13deg)}
+  50%{transform:rotate(18deg)}
+}
+@keyframes elariaChibiSelected{
+  0%,100%{transform:translate(-50%,0) scale(.82);opacity:.55}
+  50%{transform:translate(-50%,-7px) scale(1.15);opacity:1}
+}
+@keyframes elariaChibiLunge{
+  0%,100%{transform:translate(0,0) rotate(0deg) scale(1)}
+  22%{transform:translate(-9px,4px) rotate(-8deg) scale(.96)}
+  51%{transform:translate(56px,-24px) rotate(15deg) scale(1.18)}
+  75%{transform:translate(22px,-5px) rotate(-5deg) scale(1.04)}
+}
+@keyframes elariaChibiEnemyLunge{
+  0%,100%{transform:translate(0,0) rotate(0deg) scale(1)}
+  24%{transform:translate(12px,6px) rotate(7deg) scale(.97)}
+  54%{transform:translate(-58px,-25px) rotate(-15deg) scale(1.16)}
+}
+@keyframes elariaChibiCast{
+  0%,100%{transform:translateY(0) scale(1)}
+  25%{transform:translateY(-15px) scale(1.04) rotate(-7deg)}
+  58%{transform:translateY(-27px) scale(1.12) rotate(7deg)}
+  80%{transform:translateY(-11px) scale(1.07)}
+}
+@keyframes elariaChibiMagic{
+  0%{opacity:0;transform:scale(.35) rotate(0deg)}
+  55%{opacity:1;transform:scale(1.6) rotate(145deg)}
+  100%{opacity:0;transform:scale(2.2) rotate(270deg)}
+}
+@keyframes elariaChibiRecoil{
+  0%,100%{transform:translateX(0) rotate(0deg);opacity:1}
+  20%{transform:translateX(-17px) rotate(-10deg);opacity:.65}
+  40%{transform:translateX(13px) rotate(8deg);opacity:1}
+  65%{transform:translateX(-11px) rotate(-6deg);opacity:.7}
+}
+@media(max-width:720px){
+  .elaria-persistent-chibis .chibi-combat-party{left:1%;width:68%}
+  .elaria-persistent-chibis .chibi-combat-foes{right:1%;width:29%}
+  .elaria-persistent-chibis .elaria-chibi-avatar{width:clamp(48px,13vw,90px);flex-basis:90px}
+  .elaria-persistent-chibis .elaria-chibi-avatar.enemy-chibi{width:clamp(65px,19vw,112px);flex-basis:112px}
+  .elaria-persistent-chibis .chibi-combat-party,.elaria-persistent-chibis .chibi-combat-foes{bottom:8px}
+  .elaria-persistent-chibis .chibi-name{font-size:10px}
+  .elaria-persistent-chibis .chibi-health{height:5px}
+}
+@media(max-width:390px){
+  .elaria-persistent-chibis .elaria-chibi-avatar{width:clamp(43px,12vw,70px);flex-basis:70px}
+  .elaria-persistent-chibis .elaria-chibi-avatar.enemy-chibi{width:clamp(58px,18vw,88px);flex-basis:88px}
+  .elaria-persistent-chibis .chibi-combat-party{gap:1px}
+}
+@media(prefers-reduced-motion:reduce){
+  .elaria-persistent-chibis .elaria-chibi-avatar,
+  .elaria-persistent-chibis .elaria-chibi-avatar *,
+  .elaria-persistent-chibis .elaria-chibi-avatar:before,
+  .elaria-persistent-chibis .elaria-chibi-avatar:after{
+    animation:none!important;transition:none!important;
+  }
+}
