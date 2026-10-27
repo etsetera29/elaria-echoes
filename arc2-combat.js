@@ -3,6 +3,7 @@
 'use strict';
 if(!window.ARC2)return;
 const A=window.ARC2;
+const safeText=value=>String(value).replace(/[&<>\"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
 const baseStats=stats;
 stats=function(p){
 const s=baseStats(p),sets={};
@@ -103,7 +104,7 @@ if(!battleInfo){battleInfo=document.createElement('section');battleInfo.id='arc2
 if(battle){
 const opponent=battle.enemy,hero=state.hero;
 const special=battle.arc2Type&&A.enemies[battle.arc2Type];
-battleInfo.innerHTML='<div class="arc2-battle-header">'+(special?'<span class="arc2-enemy-icon">'+special.icon+'</span><div><b>'+special.name+'</b><small> Tidebound encounter</small></div>':'<span>⚔️ Party formation</span>')+'</div><div class="arc2-party-icons">'+members().map(p=>'<span title="'+p.cl+'">'+(p.cl==='Guardian'?'🛡️':p.cl==='Duelist'?'⚔️':p.cl==='Idol'?'🎤':p.cl==='Witch'?'🧙':p.cl==='Gunner'?'🔫':p.cl==='Assassin'?'🗡️':'✨')+' '+p.name+' '+p.hp+' HP</span>').join('')+'</div>';
+battleInfo.innerHTML='<div class="arc2-battle-header">'+(special?'<span class="arc2-enemy-icon">'+special.icon+'</span><div><b>'+special.name+'</b><small> Tidebound encounter</small></div>':'<span>⚔️ Party formation</span>')+'</div><div class="arc2-party-icons">'+members().map(p=>'<span title="'+p.cl+'">'+(p.cl==='Guardian'?'🛡️':p.cl==='Duelist'?'⚔️':p.cl==='Idol'?'🎤':p.cl==='Witch'?'🧙':p.cl==='Gunner'?'🔫':p.cl==='Assassin'?'🗡️':'✨')+' '+safeText(p.name)+' '+p.hp+' HP</span>').join('')+'</div>';
 }else battleInfo.innerHTML='';
 if(battle){
 const actor=members().find(m=>m.id===battle.turn),root=document.getElementById('battleActions');
