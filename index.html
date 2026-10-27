@@ -1080,4 +1080,27 @@ document.getElementById('quests').innerHTML+='<p>🪞 The Stranger in My Voice: 
 const echoNewGameBase=newGame;
 newGame=function(){echoNewGameBase();ensureHeroClasses();render();autoSave()};
 render();
+</script><style>
+#travelMap{padding:12px;border:1px solid #8c9fc7;border-radius:12px;background:#172541;margin:12px 0}
+#travelMap button{margin:5px;min-height:40px}
+#travelMap .locked{opacity:.5}
+</style>
+<script>
+const WORLD_PLACES={village:{name:'Asteria Village',x:10,y:9},forest:{name:'Whisperleaf Forest',x:1,y:6},moonfall:{name:'Moonfall Ruins',x:1,y:6},cryptAntechamber:{name:'Hall of Ash',x:1,y:6},cryptArchive:{name:'Archive of Names',x:1,y:6},cryptDepths:{name:'Deepest Crypt',x:1,y:6}};
+function trackVisit(){if(!state)return;state.visitedPlaces||={};if(WORLD_PLACES[state.zone])state.visitedPlaces[state.zone]=true}
+function travelTo(zone){if(!state||battle||!WORLD_PLACES[zone]||!state.visitedPlaces?.[zone])return;
+const p=WORLD_PLACES[zone];state.zone=zone;state.x=p.x;state.y=p.y;
+if(zone==='moonfall')state.flags.bossDefeatedThisVisit=false;
+if(zone==='cryptDepths')state.flags.cryptDefeatedThisVisit=false;
+note('Fast traveled to '+p.name+'.');render();autoSave()}
+const mapRenderBase=render;
+render=function(){if(!state)return;trackVisit();mapRenderBase();
+let el=document.getElementById('travelMap');if(!el){el=document.createElement('section');el.id='travelMap';document.getElementById('party').after(el)}
+el.innerHTML='<h4>🗺 World Map & Fast Travel</h4><p>Discover a location once to unlock teleportation. Fast travel is unavailable in battle.</p>'+Object.entries(WORLD_PLACES).map(([id,p])=>'<button '+(battle||!state.visitedPlaces[id]?'disabled':'')+' onclick="travelTo(\''+id+'\')">'+(state.visitedPlaces[id]?'📍 ':'🔒 ')+p.name+(state.zone===id?' (Here)':'')+'</button>').join('');
+};
+const mapMoveBase=move;
+move=function(dx,dy){mapMoveBase(dx,dy);if(state){trackVisit();autoSave()}};
+const mapNewGameBase=newGame;
+newGame=function(){mapNewGameBase();trackVisit();autoSave()};
+render();
 </script></body></html>
