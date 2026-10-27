@@ -180,8 +180,14 @@ render=function(){
     stagedBattle=null;
     rosterSignature='';
     actorNodes.clear();
+    // Keep the two persistent sprite rows intact for the next encounter.
+    // Clearing the layer itself would remove their containers and break
+    // subsequent battles after the first victory.
     const layer=document.getElementById('elariaPersistentChibis');
-    if(layer)layer.replaceChildren();
+    if(layer){
+      layer.querySelector('.chibi-combat-party')?.replaceChildren();
+      layer.querySelector('.chibi-combat-foes')?.replaceChildren();
+    }
   }
 };
 
