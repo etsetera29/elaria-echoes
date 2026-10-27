@@ -287,4 +287,164 @@ help.id='battleKeys';help.className='muted';help.textContent='PC: 1 Basic · 2 S
 document.getElementById('battleActions').after(help);
 };
 render();
+</script><style>
+#attributePanel{background:#101b33;border:1px solid #6e82ac;border-radius:10px;padding:11px;margin:9px 0}
+#attributePanel h4{margin:0 0 6px;color:#f6db9d}
+.attribute-row{display:grid;grid-template-columns:1fr 42px 80px;gap:6px;align-items:center;margin:6px 0;font-size:13px}
+.attribute-row button{padding:6px;font-size:13px}
+#blessingStatus{padding:8px;background:#303956;border-radius:8px;margin:7px 0;font-size:13px}
+.church-sign{position:absolute;pointer-events:none}
+.branch-choice{display:block;width:100%;text-align:left;margin:9px 0;padding:12px;background:#344a70}
+.branch-choice:hover{background:#536997}
+</style>
+<script>
+/* Attributes, church blessings and branching side stories — additive save-compatible expansion */
+const ATTRIBUTE_KEYS=['str','vit','agi','int','spi','luk'];
+const ATTRIBUTE_LABELS={str:'Strength',vit:'Vitality',agi:'Agility',int:'Intellect',spi:'Spirit',luk:'Luck'};
+const ATTRIBUTE_HINTS={str:'Physical attack',vit:'Max HP and defense',agi:'Speed and evasion',int:'Magic attack',spi:'Healing and defense',luk:'Loot chance and critical hit'};
+const RACE_ATTRIBUTE_BONUS={Human:{str:1,vit:1,agi:1,int:1,spi:1,luk:1},Elf:{agi:3,int:2,spi:1},Beastkin:{str:3,vit:2,agi:1}};
+const CLASS_ATTRIBUTE_BONUS={Warrior:{str:3,vit:3},Mage:{int:4,spi:2},Rogue:{agi:3,luk:3},Priestess:{spi:4,int:2}};
+function ensureAttributes(p){
+if(!p.attributes)p.attributes={str:0,vit:0,agi:0,int:0,spi:0,luk:0};
+if(!Number.isFinite(p.attributePoints))p.attributePoints=Math.max(0,(p.level-1)*3);
+if(!Number.isFinite(p.attributeAwardedLevel))p.attributeAwardedLevel=p.level;
+if(!p.attributeBaseApplied)p.attributeBaseApplied=true;
+}
+function attributeValue(p,key){ensureAttributes(p);return (p.attributes[key]||0)+(RACE_ATTRIBUTE_BONUS[p.race]?.[key]||0)+(CLASS_ATTRIBUTE_BONUS[p.cl]?.[key]||0)}
+function allocateAttribute(id,key){
+if(!ATTRIBUTE_KEYS.includes(key))return;
+const p=members().find(p=>p.id===id);if(!p)return;
+ensureAttributes(p);if(p.attributePoints<1)return;
+p.attributes[key]++;p.attributePoints--;
+p.hp=Math.min(p.hp,stats(p).maxhp);
+note(p.name+' invested 1 point in '+ATTRIBUTE_LABELS[key]+'.');render();autoSave();
+}
+const attributeStatsBase=stats;
+stats=function(p){
+ensureAttributes(p);
+let s=attributeStatsBase(p),v=k=>attributeValue(p,k);
+const magic=p.cl==='Mage',healer=p.cl==='Priestess',rogue=p.cl==='Rogue';
+s.atk+=Math.floor(v('str')*(magic?.35:healer?.35:rogue?.85:1.5)+v('int')*(magic?2.2:healer?.65:.25));
+s.def+=Math.floor(v('vit')*.8+v('spi')*.4);
+s.maxhp+=Math.floor(v('vit')*(p.cl==='Warrior'?11:8)+v('spi')*2);
+s.spd+=Math.floor(v('agi')*(rogue?4.5:3));
+s.healPower=Math.floor(v('spi')*(healer?5:2)+v('int')*(healer?2:1));
+s.crit=Math.min(.5,.05+v('luk')*.012);
+s.lootBonus=Math.min(.65,v('luk')*.015);
+if(state?.blessing?.type==='health')s.maxhp=Math.floor(s.maxhp*1.25);
+if(state?.blessing?.type==='attack')s.atk=Math.floor(s.atk*1.2);
+return s;
+};
+const attributeHitBase=hit;
+hit=function(a,b,mul=1){
+if(a.id!=='enemy'&&Math.random()<(stats(a).crit||0)){mul*=1.5;note('Critical strike!')}
+return attributeHitBase(a,b,mul);
+};
+const attributeActBase=act;
+act=function(kind){
+if(battle&&kind==='skill'){
+const p=members().find(x=>x.id===battle.turn);
+if(p?.cl==='Priestess'&&battle.points>=1){
+const t=members().filter(x=>x.hp>0).sort((a,b)=>a.hp/stats(a).maxhp-b.hp/stats(b).maxhp)[0];
+if(t)t.hp=Math.min(stats(t).maxhp,t.hp+(stats(p).healPower||0));
+}
+}
+attributeActBase(kind);
+};
+const attributeVictoryBase=victory;
+victory=function(){
+if(!battle)return;
+const enemyType=battle.enemy.type;
+const lucky=members().reduce((max,p)=>Math.max(max,stats(p).lootBonus||0),0)+(state.blessing?.type==='luck'?.35:0);
+const oldLevels=members().map(p=>({id:p.id,level:p.level}));
+attributeVictoryBase();
+oldLevels.forEach(entry=>{const p=members().find(x=>x.id===entry.id);if(!p)return;ensureAttributes(p);const gainLevels=Math.max(0,p.level-p.attributeAwardedLevel);if(gainLevels){p.attributePoints+=gainLevels*3;p.attributeAwardedLevel=p.level;note(p.name+' earned '+gainLevels*3+' attribute points!')}});
+if(Math.random()<Math.min(.9,lucky)){gain(enemyType==='wolf'?'iron':enemyType==='boss'?'crystal':'herb');note('Lucky bonus drop!')}
+if(state.blessing){state.blessing.battles--;if(state.blessing.battles<=0){note('The church blessing fades.');state.blessing=null}}
+render();autoSave();
+};
+const attributeNewGameBase=newGame;
+newGame=function(){attributeNewGameBase();members().forEach(ensureAttributes);render();autoSave()};
+const attributeRenderBase=render;
+render=function(){
+members().forEach(ensureAttributes);
+attributeRenderBase();
+if(!state)return;
+const partyEl=document.getElementById('party');
+let section=document.getElementById('attributePanel');
+if(!section){section=document.createElement('div');section.id='attributePanel';partyEl.after(section)}
+let html='<h4>✦ Attribute Training</h4><p class="muted">Gain 3 points per level. Race and class change the effects of attributes.</p>';
+members().forEach(p=>{
+html+='<details '+(p.attributePoints>0?'open':'')+'><summary><b>'+p.name+'</b> · '+p.attributePoints+' unspent points</summary>';
+ATTRIBUTE_KEYS.forEach(k=>{html+='<div class="attribute-row"><span title="'+ATTRIBUTE_HINTS[k]+'">'+ATTRIBUTE_LABELS[k]+'</span><b>'+attributeValue(p,k)+'</b><button '+(p.attributePoints<=0?'disabled':'')+' onclick="allocateAttribute(\''+p.id+'\',\''+k+'\')">+ Add</button></div>'});
+html+='</details>';
+});
+section.innerHTML=html;
+let bless=document.getElementById('blessingStatus');
+if(!bless){bless=document.createElement('div');bless.id='blessingStatus';section.after(bless)}
+const b=state.blessing;
+bless.textContent=b?'⛪ '+b.label+' · '+b.battles+' battles remaining':'⛪ No active blessing · Visit Father Lucien at the church';
+if(state.zone==='village'){
+const c=document.getElementById('world');c.setAttribute('aria-label','Asteria Village with Church of Dawn at the northeast');
+}
+};
+const churchDrawBase=draw;
+draw=function(){
+churchDrawBase();
+if(state?.zone!=='village')return;
+const x=15*32,y=2*32;
+ctx.fillStyle='#4c4c79';ctx.fillRect(x,y+16,92,78);
+ctx.fillStyle='#e5d9b7';ctx.fillRect(x+7,y+24,78,67);
+ctx.fillStyle='#72628f';ctx.beginPath();ctx.moveTo(x-4,y+26);ctx.lineTo(x+46,y-12);ctx.lineTo(x+96,y+26);ctx.fill();
+ctx.fillStyle='#f8e6aa';ctx.fillRect(x+41,y+36,11,18);
+ctx.fillStyle='#a4d4ec';ctx.fillRect(x+33,y+63,26,28);
+ctx.fillStyle='#f3dba0';ctx.fillRect(x+43,y-8,7,25);ctx.fillRect(x+37,y-2,20,6);
+ctx.font='19px sans-serif';ctx.fillText('⛪',x+37,y+41);
+ctx.font='12px sans-serif';ctx.fillStyle='#fff2c7';ctx.fillText('CHURCH',x+19,y+110);
+ctx.font='20px sans-serif';ctx.fillText('🙏',14*32+3,5*32+26);
+};
+const churchInteractBase=interact;
+interact=function(){
+if(state?.zone==='village'&&!battle&&Math.abs(state.x-14)+Math.abs(state.y-5)<=2){talk('priest');return}
+churchInteractBase();
+};
+const churchTalkBase=talk;
+talk=function(id){
+if(id==='priest'){churchDialog();return}
+if(id==='kael'&&state.flags.kaelJoined&&!state.flags.kaelBranchDone){kaelBranch();return}
+if(id==='lilia'&&state.flags.liliaJoined&&!state.flags.liliaBranchDone){liliaBranch();return}
+churchTalkBase(id);
+};
+function churchDialog(){
+let b=state.blessing;
+modal('<h2>⛪ Church of Dawn</h2><p>Father Lucien: “The stars guide our choices, but never choose for us. Accept a blessing, and carry its light into battle.”</p><p class="muted">Blessings last 5 victories. Only one can be active. The prayer is free, but requires 3 victories before another prayer.</p><p>'+(b?'Current: '+b.label+' ('+b.battles+' battles left)':'No active blessing')+'</p><button onclick="prayBlessing()" '+(b?'disabled':'')+'>Receive Random Blessing</button> <button onclick="closeModal()">Leave</button>');
+}
+function prayBlessing(){
+if(state.blessing)return;
+const choices=[{type:'luck',label:'Fortune of Dawn — +35% bonus loot chance'},{type:'health',label:'Sacred Vitality — +25% maximum HP'},{type:'regen',label:'Gentle Renewal — recover 12% HP after victory'},{type:'attack',label:'Radiant Might — +20% attack'}];
+state.blessing={...choices[Math.floor(Math.random()*choices.length)],battles:5};
+note('Father Lucien grants '+state.blessing.label+'.');
+closeModal();render();autoSave();
+}
+const churchVictoryBase=victory;
+victory=function(){
+const regen=state.blessing?.type==='regen';
+churchVictoryBase();
+if(regen){members().forEach(p=>{p.hp=Math.min(stats(p).maxhp,p.hp+Math.round(stats(p).maxhp*.12))});note('Gentle Renewal restores party health.');render();autoSave()}
+};
+function kaelBranch(){
+modal('<h2>Kael — Side Story: The Broken Crest</h2><p>A knight arrives with a royal warrant for Kael. “He deserted his post!” Kael says nothing. What should your party do?</p><button class="branch-choice" onclick="chooseBranch(\'kael\',\'mercy\')">Defend Kael and investigate the accusation</button><button class="branch-choice" onclick="chooseBranch(\'kael\',\'duty\')">Ask Kael to confront the knight publicly</button>');
+}
+function liliaBranch(){
+modal('<h2>Lilia — Side Story: The Unfinished Hymn</h2><p>A sick child needs a rare remedy. Lilia has enough magic to attempt a risky healing prayer, but the herbs could be used to prepare a safer medicine.</p><button class="branch-choice" onclick="chooseBranch(\'lilia\',\'faith\')">Trust Lilia to perform the healing prayer</button><button class="branch-choice" onclick="chooseBranch(\'lilia\',\'care\')">Prepare a medicine and help her learn patience</button>');
+}
+function chooseBranch(who,path){
+const f=state.flags;
+if(who==='kael'){if(f.kaelBranchDone)return;f.kaelBranchDone=path;state.gold+=path==='mercy'?80:120;gain(path==='mercy'?'wardencoat':'leafblade');modal('<h2>The Broken Crest — '+(path==='mercy'?'The Truth':'A Knight’s Honor')+'</h2><p>'+(path==='mercy'?'Your investigation uncovers forged orders. Kael is cleared, and he quietly thanks you for believing in him.':'Kael challenges the knight to an honorable duel. His victory restores his name, but the royal order now knows where he lives.')+'</p><p>Reward: '+(path==='mercy'?'80 gold and Wardenplate':'120 gold and Whisperleaf Saber')+'. This decision is saved.</p><button onclick="closeModal()">Continue</button>')}
+else{if(f.liliaBranchDone)return;f.liliaBranchDone=path;state.gold+=path==='faith'?70:100;gain(path==='faith'?'starrobe':'potion');modal('<h2>The Unfinished Hymn — '+(path==='faith'?'A Miracle':'A Gentle Remedy')+'</h2><p>'+(path==='faith'?'Lilia’s spell blossoms into a brilliant miracle. She learns to trust her heart, even when she stumbles.':'Together you prepare the remedy. The child recovers, and Lilia learns that kindness sometimes means slowing down.')+'</p><p>Reward: '+(path==='faith'?'70 gold and Astral Robe':'100 gold and Healing Potion')+'. This decision is saved.</p><button onclick="closeModal()">Continue</button>')}
+render();autoSave();
+}
+const churchRestBase=rest;
+rest=function(){churchRestBase();render()};
+render();
 </script></body></html>
