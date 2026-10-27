@@ -1,5 +1,42 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171d36"><title>Elaria: Echoes of the Fallen Star</title><style>
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#30365d,#10162b 70%);color:#f4eacb;font:15px system-ui,sans-serif}button,select,input{font:inherit}button{background:#293e68;color:#fff2cf;border:1px solid #6986ac;border-radius:7px;padding:9px;cursor:pointer}button:hover{background:#3b598c}button:disabled{opacity:.4}header{background:#1b2544;padding:10px 18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}h1{font-size:18px;margin:0;color:#ffe09c}main{max-width:1150px;margin:auto;padding:12px;display:grid;grid-template-columns:minmax(0,700px) minmax(270px,1fr);gap:12px}.panel{background:#1b2540;border:1px solid #48587a;border-radius:10px;padding:12px;margin-bottom:10px}canvas{width:100%;image-rendering:pixelated;border:3px solid #8b83b9;box-shadow:0 0 22px #737db744;background:#203c34;border-radius:7px;display:block}#log{height:130px;overflow:auto;font-size:13px;line-height:1.6}#controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}.stats{font-size:13px;line-height:1.8}.pill{display:inline-block;background:#344b71;border-radius:20px;padding:3px 9px;margin:3px}.gold{color:#ffd17a}.modal{position:fixed;inset:0;background:#090e1bdc;display:flex;align-items:center;justify-content:center;padding:15px;z-index:4}.modal.hidden{display:none}.dialog{background:#202c4c;border:2px solid #879ac2;border-radius:12px;padding:20px;width:min(680px,100%);max-height:90vh;overflow:auto}label{display:block;margin:10px 0}select,input{width:100%;padding:9px;background:#101a32;color:white;border:1px solid #7184ac;border-radius:6px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.muted{color:#bdc6d9;font-size:13px}.enemy{color:#ffaaa5}.ally{color:#a6e7b5}#party,#quests,#gear{line-height:1.6}#battleUI{display:none}#battleUI.active{display:block}#exploreUI.hidden{display:none}@media(max-width:800px){main{display:block}header{font-size:12px}button{padding:11px}}
+</style><style>
+/* Combat-only character animation system */
+#combatStage{position:relative;min-height:238px;overflow:hidden;border:2px solid #7584b8;border-radius:12px;margin:12px 0;background:radial-gradient(ellipse at 52% 78%,#5b618b 0%,#303b64 43%,#141d39 100%);isolation:isolate}
+#combatStage:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 35px,#ffffff07 36px 37px),linear-gradient(transparent 72%,#6f709044 73%,#3d496e 100%);pointer-events:none}
+#combatStage .moon{position:absolute;right:17%;top:10px;width:80px;height:80px;border-radius:50%;background:#c8d7f0;box-shadow:0 0 50px #b8c8ff77;opacity:.45}
+#combatStage .stage-party{position:absolute;left:2%;bottom:18px;display:flex;align-items:flex-end;gap:4px;width:64%;height:185px}
+#combatStage .stage-enemy{position:absolute;right:3%;bottom:18px;width:31%;display:flex;justify-content:center;align-items:flex-end;height:185px}
+#combatStage .fighter{position:relative;width:85px;height:150px;flex-shrink:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transform-origin:50% 92%;animation:elaria-idle 2.3s ease-in-out infinite;filter:drop-shadow(0 7px 3px #050a1c99)}
+#combatStage .fighter:nth-child(2){animation-delay:-.8s}#combatStage .fighter:nth-child(3){animation-delay:-1.5s}
+#combatStage .fighter .head{width:46px;height:47px;border-radius:45% 45% 48% 48%;background:linear-gradient(115deg,#ffe2c2,#dba788);border:2px solid #453e5b;position:relative;z-index:2}
+#combatStage .fighter .hair{position:absolute;left:-4px;right:-4px;top:-11px;height:25px;background:var(--hair,#7359a3);border-radius:55% 50% 28% 20%;box-shadow:inset 7px -4px #ffffff25}
+#combatStage .fighter .eyes{position:absolute;top:25px;left:11px;width:6px;height:5px;background:#2c3b60;box-shadow:16px 0 #2c3b60}
+#combatStage .fighter .body{width:58px;height:64px;background:linear-gradient(90deg,var(--outfit,#5d79bd),#c3d6f5,var(--outfit,#5d79bd));clip-path:polygon(21% 0,79% 0,100% 100%,0 100%);margin-top:-2px;border-radius:6px}
+#combatStage .fighter .feet{width:45px;height:22px;background:linear-gradient(90deg,#202a4d 0 42%,transparent 42% 58%,#202a4d 58%);border-radius:3px}
+#combatStage .fighter .weapon{position:absolute;right:-8px;top:56px;font-size:30px;transform:rotate(-15deg);filter:drop-shadow(0 0 4px #a4dfff)}
+#combatStage .fighter .nametag{position:absolute;bottom:-15px;font-size:11px;white-space:nowrap;background:#17233bd9;padding:2px 6px;border-radius:4px;color:#fff2d9}
+#combatStage .fighter.enemy .head{background:linear-gradient(110deg,#a3b6cc,#4f608b);border-color:#3a3158}
+#combatStage .fighter.enemy .body{background:linear-gradient(90deg,#4d426d,#b092c9,#4d426d)}
+#combatStage .fighter.enemy{width:115px;transform:scale(1.12);animation:elaria-foe-idle 2.8s ease-in-out infinite}
+#combatStage .fighter.defeated{opacity:.2;filter:grayscale(1);animation:none;transform:rotate(20deg)}
+#combatStage .fighter.current{filter:drop-shadow(0 0 11px #e9d795)}
+#combatStage .fighter.strike{animation:elaria-strike .52s ease-in-out 1}
+#combatStage .fighter.cast{animation:elaria-cast .85s ease-in-out 1}
+#combatStage .fighter.ultimate{animation:elaria-ultimate 1.2s ease-in-out 1;z-index:4}
+#combatStage .fighter.hit{animation:elaria-hit .42s ease-in-out 1}
+#combatStage .fx{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:110px;color:#d5e8ff;text-shadow:0 0 25px #8ccfff;animation:elaria-fx .85s ease-out forwards;z-index:5}
+#combatStage .fx.heal{color:#b7ffc6;text-shadow:0 0 28px #8fffbd}#combatStage .fx.ult{font-size:150px;color:#ffe4a3;text-shadow:0 0 40px #ad9cff}
+#combatStage .stage-label{position:absolute;left:12px;top:10px;font-size:11px;letter-spacing:2px;color:#e8d8ff;opacity:.8}
+@keyframes elaria-idle{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+@keyframes elaria-foe-idle{0%,100%{transform:translateY(0) scale(1.08)}50%{transform:translateY(-8px) scale(1.13)}}
+@keyframes elaria-strike{0%,100%{transform:translateX(0)}40%{transform:translateX(75px) rotate(10deg)}60%{transform:translateX(65px) rotate(-12deg)}}
+@keyframes elaria-cast{0%,100%{transform:translateY(0)}35%{transform:translateY(-22px) scale(1.08);filter:drop-shadow(0 0 20px #b2f6ff)}}
+@keyframes elaria-ultimate{0%{transform:scale(1)}35%{transform:scale(1.35) translateY(-22px);filter:drop-shadow(0 0 35px #ffdf7e)}65%{transform:scale(1.25) translateX(45px)}100%{transform:scale(1)}}
+@keyframes elaria-hit{0%,100%{transform:translateX(0)}25%{transform:translateX(-12px);filter:brightness(2)}50%{transform:translateX(9px)}}
+@keyframes elaria-fx{0%{opacity:0;transform:scale(.2) rotate(-30deg)}35%{opacity:1;transform:scale(1.2) rotate(0)}100%{opacity:0;transform:scale(1.8) rotate(30deg)}}
+@media(max-width:500px){#combatStage{min-height:200px}#combatStage .fighter{width:60px;transform:scale(.83);transform-origin:bottom center}#combatStage .stage-party{gap:0;left:0}#combatStage .stage-enemy{right:0}#combatStage .fighter.enemy{transform:scale(.95)}}
+@media(prefers-reduced-motion:reduce){#combatStage .fighter,#combatStage .fx{animation:none!important}}
 </style></head><body><header><h1>✦ Elaria: Echoes of the Fallen Star</h1><div><span id="location">Asteria Village</span> · <span id="money" class="gold">0 G</span> · <button onclick="save()">Save</button> <button onclick="exportSave()">Export</button> <button onclick="document.getElementById('importFile').click()">Import</button><input id="importFile" type="file" accept=".json" hidden onchange="importSave(event)"></div></header>
 <main><section><div class="panel"><canvas id="world" width="640" height="416" aria-label="Pixel art exploration world"></canvas><div id="exploreUI"><div id="controls"><button onclick="move(0,-1)">↑</button><button onclick="move(-1,0)">←</button><button onclick="interact()">Interact / E</button><button onclick="move(1,0)">→</button><button onclick="move(0,1)">↓</button></div><p class="muted">WASD / arrows to move · E to interact · Walk into roaming enemies to battle. Blue portal leads to Whisperleaf Forest.</p></div><div id="battleUI"><h3 id="battleTitle"></h3><div id="turnQueue" class="muted"></div><div id="combatants"></div><div id="battleActions" class="actions"></div></div></div><div class="panel"><b>Adventure Journal</b><div id="log"></div></div></section>
 <aside><div class="panel"><h3>Party</h3><div id="party"></div><button onclick="rest()">Rest at Inn (20 G)</button></div><div class="panel"><h3>Quests</h3><div id="quests"></div></div><div class="panel"><h3>Inventory & Equipment</h3><div id="gear"></div></div><div class="panel"><h3>World Guide</h3><p class="muted">Village: speak to the Elder ✨, Kael ⚔️ and Lilia 💗. Forest: defeat enemies, collect resources and discover the Fallen Star. Return to recruit your companions after completing both chapters of their stories.</p></div></aside></main>
@@ -123,6 +160,52 @@ let x=state.x*32,y=state.y*32;if(state.zone==='moonfall'||state.zone==='village'
 ctx.fillStyle='#18233d';ctx.fillRect(x+8,y+26,6,5);ctx.fillRect(x+19,y+26,6,5);ctx.fillStyle='#6373bf';ctx.fillRect(x+7,y+18,19,9);ctx.fillStyle='#a5c9f2';ctx.fillRect(x+10,y+19,13,5);ctx.fillStyle='#f8d3b5';ctx.fillRect(x+10,y+7,13,12);ctx.fillStyle='#493e6b';ctx.fillRect(x+8,y+3,17,7);ctx.fillRect(x+7,y+7,4,10);ctx.fillStyle='#f5f7ff';ctx.fillRect(x+12,y+12,3,3);ctx.fillRect(x+20,y+12,2,3);
 }
 if(state.zone==='forest'){ctx.fillStyle='#aa8bff';ctx.fillRect(608,192,32,32);ctx.fillStyle='#f3e4ff';ctx.font='11px sans-serif';ctx.fillText('RUINS',574,184)}
+};
+render();
+</script><script>
+/* Combat animation presentation. The underlying turn logic and save format remain unchanged. */
+const battleRenderBase=render;
+function combatPortrait(p,enemySide=false){
+const who=p.id==='kael'?'kael':p.id==='lilia'?'lilia':p.id==='enemy'?'enemy':'hero';
+const hair={kael:'#313a55',lilia:'#f0a9c7',hero:'#8461b2',enemy:'#b0b3d0'}[who];
+const outfit={kael:'#536a89',lilia:'#e7a9cb',hero:'#5d79bd',enemy:'#66517c'}[who];
+const weapon={kael:'⚔',lilia:'✧',hero:p.cl==='Mage'?'✦':p.cl==='Rogue'?'🗡':'⚔',enemy:'✦'}[who];
+return '<div class="fighter '+(enemySide?'enemy ':'')+(p.hp<=0?'defeated ':'')+(battle?.turn===p.id?'current':'')+'" data-combat-id="'+p.id+'" style="--hair:'+hair+';--outfit:'+outfit+'"><div class="head"><div class="hair"></div><div class="eyes"></div></div><div class="body"></div><div class="feet"></div><div class="weapon">'+weapon+'</div><span class="nametag">'+p.name+'</span></div>';
+}
+render=function(){
+battleRenderBase();
+if(!battle)return;
+const root=document.getElementById('battleUI');
+let stage=document.getElementById('combatStage');
+if(!stage){stage=document.createElement('div');stage.id='combatStage';root.insertBefore(stage,document.getElementById('turnQueue'))}
+stage.innerHTML='<div class="moon"></div><div class="stage-label">ELARIA • BATTLE</div><div class="stage-party">'+members().map(p=>combatPortrait(p)).join('')+'</div><div class="stage-enemy">'+combatPortrait(battle.enemy,true)+'</div>';
+};
+function combatEffect(actorId,kind,targetId){
+const stage=document.getElementById('combatStage');if(!stage)return;
+const actor=Array.from(stage.querySelectorAll('[data-combat-id]')).find(x=>x.dataset.combatId===actorId);
+const target=Array.from(stage.querySelectorAll('[data-combat-id]')).find(x=>x.dataset.combatId===targetId);
+if(actor){actor.classList.remove('current');actor.classList.add(kind==='ultimate'?'ultimate':kind==='skill'?'cast':'strike')}
+if(target)target.classList.add('hit');
+const fx=document.createElement('div');fx.className='fx '+(actorId==='lilia'&&kind!=='basic'?'heal':kind==='ultimate'?'ult':'');
+fx.textContent=actorId==='lilia'&&kind!=='basic'?'✿':kind==='ultimate'?'✦':'⚡';stage.appendChild(fx);
+fx.addEventListener('animationend',()=>fx.remove(),{once:true});
+}
+const actBase=act;act=function(kind){
+if(!battle||battle.turn==='enemy')return;
+const actor=battle.turn;
+if(kind==='skill'&&battle.points<1)return;
+if(kind==='ultimate'&&members().find(p=>p.id===actor)?.energy<100)return;
+actBase(kind);combatEffect(actor,kind,'enemy');
+};
+const ultimateBase=ultimate;ultimate=function(pid){
+if(!battle||!members().some(p=>p.id===pid&&p.energy>=100&&p.hp>0))return;
+ultimateBase(pid);combatEffect(pid,'ultimate','enemy');
+};
+const nextTurnBase=nextTurn;
+nextTurn=function(){
+const enemyWillAct=battle?.turn==='enemy';
+nextTurnBase();
+if(enemyWillAct&&battle)combatEffect('enemy','basic',members().find(p=>p.hp>0)?.id||'hero');
 };
 render();
 </script></body></html>
