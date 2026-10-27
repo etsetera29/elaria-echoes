@@ -112,11 +112,6 @@ if(active&&state){for(const p of allCharacters()){p.guardDraught=false;p.swiftBr
 };
 const baseDefeat=defeat;
 defeat=function(){baseDefeat();if(state){for(const p of allCharacters()){p.guardDraught=false;p.swiftBrew=false;p.guardBarrier=0;p.idolInspiration=0}}};
-const baseBossContact=checkBossContact;
-checkBossContact=function(){
-if(state?.zone==='sunshore'&&arc().chapter===3&&Object.keys(arc().recruited).length<3&&Math.abs(state.x-15)+Math.abs(state.y-5)<=2){note('Gather Brann, Selene and Pippa before challenging the Reefbreaker.');return}
-baseBossContact();
-};
 const baseDraw=draw;
 draw=function(){
 baseDraw();
