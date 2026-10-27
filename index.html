@@ -105,7 +105,7 @@ function note(s){state.log.unshift(s);state.log=state.log.slice(0,40);document.g
 function rand(x,y){let v=Math.sin(x*127.1+y*311.7+seed)*43758.5453;return v-Math.floor(v)}
 const npcs=[{x:10,y:4,icon:'✨',name:'Elder Mira',id:'elder'},{x:5,y:7,icon:'⚔️',name:'Kael',id:'kael'},{x:15,y:7,icon:'💗',name:'Lilia',id:'lilia'},{x:3,y:3,icon:'🛒',name:'Merchant',id:'merchant'},{x:17,y:3,icon:'🏠',name:'Innkeeper',id:'inn'}];
 function walls(x,y){if(x<0||y<0||x>=W||y>=H)return true;if(state.zone==='village')return (x===0||x===19||y===0||y===12)&&!(x===19&&y===6);return false}
-function move(dx,dy){if(!state||battle)return;let x=state.x+dx,y=state.y+dy;if(walls(x,y))return;if(state.zone==='village'&&x===19&&y===6){state.zone='forest';state.x=1;state.y=6;note('You enter Whisperleaf Forest.');}else if(state.zone==='forest'&&x===0&&y===6){state.zone='village';state.x=18;state.y=6;note('You return to Asteria.');}else{state.x=x;state.y=y;if(state.zone==='forest'&&rand(x+state.kills.slime*3,y+state.kills.wolf*7)<.18)startBattle(rand(x,y)<.48?'slime':rand(x+3,y)<.8?'wolf':'bandit')}render();autoSave()}
+function move(dx,dy){if(!state||battle)return;let x=state.x+dx,y=state.y+dy;if(walls(x,y))return;if(state.zone==='village'&&x===19&&y===6){state.zone='forest';state.x=1;state.y=6;note('You enter Whisperleaf Forest.');}else if(state.zone==='forest'&&x===0&&y===6){state.zone='village';state.x=18;state.y=6;note('You return to Asteria.');}else{state.x=x;state.y=y;if(false)startBattle(rand(x,y)<.48?'slime':rand(x+3,y)<.8?'wolf':'bandit')}render();autoSave()}
 function interact(){if(battle)return;if(state.zone==='village'){let n=npcs.find(n=>Math.abs(n.x-state.x)+Math.abs(n.y-state.y)<=2);if(n){talk(n.id);return}note('There is nobody close enough to speak to.')}else{if(Math.abs(state.x-16)+Math.abs(state.y-3)<=3){if(!state.flags.star){state.flags.star=true;note('A shard of a fallen star pulses with strange magic. Return to Elder Mira.');gain('starorb');state.gold+=80}else note('The fallen star is quiet now.')}else if(rand(state.x,state.y)<.55){gain('herb');note('You gathered a Moonleaf Herb.')}else startBattle('slime')}render();autoSave()}
 function talk(id){let f=state.flags;if(id==='elder'){if(!f.elder){f.elder=true;modal('<h2>Elder Mira</h2><p>Last night, a star fell into Whisperleaf Forest. Creatures that once lived peacefully have turned violent. Seek the star and return with what you learn.</p><button onclick="closeModal()">I will investigate</button>')}else if(f.star&&!f.mainDone){f.mainDone=true;state.gold+=150;gain('starstaff');modal('<h2>Chapter One: The Star That Wept</h2><p>The shard bears the seal of the lost kingdom of Elaria. Mira fears this is only the beginning. A distant voice whispers: “Find the three echoes...”</p><p>Reward: 150 gold and Astral Staff. Chapter Two coming later.</p><button onclick="closeModal()">Continue</button>')}else modal('<p>Elder Mira: The forest still holds secrets. Gather strength, young traveler.</p><button onclick="closeModal()">Close</button>')}
 if(id==='kael'){if(!f.kael1){f.kael1=true;modal('<h2>Kael — The Silent Blade, Part I</h2><p>“The wolves have become aggressive. Two must be stopped before they reach the village.” Kael turns away, hiding an old knight insignia.</p><button onclick="closeModal()">Accept</button>')}else if(!f.kael2&&state.kills.wolf>=2){f.kael2=true;modal('<h2>Kael — Part II: A Broken Oath</h2><p>“My sword broke defending the border. Bring two Iron Shards. I will tell you why I left the royal guard.”</p><button onclick="closeModal()">Accept</button>')}else if(f.kael2&&!f.kaelJoined&&count('iron')>=2){consume('iron',2);f.kaelJoined=true;state.party.push({id:'kael',name:'Kael',cl:'Warrior',level:1,exp:0,hp:145,maxhp:145,atk:19,def:14,spd:88,energy:0,gear:{weapon:null,armor:null,accessory:null}});modal('<h2>Kael Joins!</h2><p>“I failed to protect someone once. Never again.” Kael joins your party as a steadfast warrior.</p><button onclick="closeModal()">Welcome, Kael</button>')}else modal('<p>Kael: '+(f.kaelJoined?'My blade is yours.':f.kael2?'Bring me 2 Iron Shards.':'Defeat 2 wolves in the forest.')+'</p><button onclick="closeModal()">Close</button>')}
@@ -158,7 +158,7 @@ if(state.zone==='forest'&&x===19&&y===6){state.zone='moonfall';state.x=1;state.y
 if(state.zone==='moonfall'&&x===0&&y===6){state.zone='forest';state.x=18;state.y=6;note('You leave the ruins. The Warden will respawn on your next visit.');render();autoSave();return}
 if(state.zone==='moonfall'){if(x<0||x>=W||y<0||y>=H)return;state.x=x;state.y=y;
 if(Math.abs(x-15)+Math.abs(y-5)<=1&&!state.flags.bossDefeatedThisVisit)startBattle('boss');
-else if(Math.random()<.12)startBattle(Math.random()<.5?'wolf':'bandit');
+else if(false)startBattle(Math.random()<.5?'wolf':'bandit');
 render();autoSave();return}
 originalMove(dx,dy)
 };
@@ -796,7 +796,7 @@ if(Math.abs(x-15)+Math.abs(y-6)<=1&&!f.cryptDefeatedThisVisit){state.x=x;state.y
 if(['cryptAntechamber','cryptArchive','cryptDepths'].includes(z)){
 if(x<0||x>=20||y<0||y>=13)return;
 state.x=x;state.y=y;
-if(z!=='cryptDepths'&&Math.random()<.09)startBattle(Math.random()<.5?'wolf':'bandit');
+if(false)startBattle(Math.random()<.5?'wolf':'bandit');
 render();autoSave();return;
 }
 cryptMoveBase(dx,dy);
@@ -914,7 +914,7 @@ victory=function(){if(!battle)return;const isGolem=battle.enemy.type==='golem';i
 if(isGolem){const qty=1+Math.floor(Math.random()*3);state.inv.golemshard=(state.inv.golemshard||0)+qty;note('Moonstone Golem dropped '+qty+' Temper Shards!');render();autoSave()}};
 const golemMoveBase=move;
 move=function(dx,dy){if(!state||battle)return;const zone=state.zone;golemMoveBase(dx,dy);
-if(!battle&&zone===state.zone&&['moonfall','cryptAntechamber','cryptArchive'].includes(zone)&&Math.random()<.13)startBattle('golem')};
+if(!battle&&zone===state.zone&&['moonfall','cryptAntechamber','cryptArchive'].includes(zone)&&false)startBattle('golem')};
 </script><script>
 const forgeRenderBase=render;
 render=function(){if(!state)return;forgeSetup();forgeRenderBase();
@@ -1271,5 +1271,66 @@ const label=document.createElement('p');label.textContent='🔫 Ammunition: '+(p
 if((p.bullets??8)<=0&&root.firstElementChild)root.firstElementChild.disabled=true;
 }
 }
+};
+</script><script>
+const MOB_ZONES=['forest','moonfall','cryptAntechamber','cryptArchive','cryptDepths'];
+function mobType(zone){if(zone==='forest')return ['slime','wolf','bandit'][Math.floor(Math.random()*3)];return ['golem','wolf','bandit'][Math.floor(Math.random()*3)]}
+function mobCell(zone,used){
+for(let tries=0;tries<150;tries++){
+const x=1+Math.floor(Math.random()*18),y=1+Math.floor(Math.random()*11);
+if(Math.abs(x-state.x)+Math.abs(y-state.y)<4&&zone===state.zone)continue;
+if(used.some(m=>m.x===x&&m.y===y))continue;
+if(zone==='moonfall'&&Math.abs(x-15)+Math.abs(y-5)<3)continue;
+return {x,y};
+}
+return {x:1+Math.floor(Math.random()*18),y:1+Math.floor(Math.random()*11)};
+}
+function ensureMobs(zone){
+if(!state||!MOB_ZONES.includes(zone))return;
+state.worldMobs||={};state.worldMobs[zone]||=[];
+const mobs=state.worldMobs[zone];
+while(mobs.length<10){const cell=mobCell(zone,mobs);mobs.push({...cell,type:mobType(zone),uid:'mob'+Math.floor(Math.random()*1e9)})}
+if(mobs.length>10)mobs.length=10;
+}
+function roamMobs(){
+if(!state||battle||!MOB_ZONES.includes(state.zone))return;
+ensureMobs(state.zone);
+const mobs=state.worldMobs[state.zone];
+for(const m of mobs){
+const distance=Math.abs(m.x-state.x)+Math.abs(m.y-state.y);
+let dx=0,dy=0;
+if(distance<=3){if(Math.abs(m.x-state.x)>=Math.abs(m.y-state.y))dx=Math.sign(state.x-m.x);else dy=Math.sign(state.y-m.y)}
+else{const dirs=[[1,0],[-1,0],[0,1],[0,-1],[0,0]];[dx,dy]=dirs[Math.floor(Math.random()*dirs.length)]}
+const x=m.x+dx,y=m.y+dy;
+if(x>0&&x<19&&y>0&&y<12&&!mobs.some(other=>other!==m&&other.x===x&&other.y===y)){m.x=x;m.y=y}
+}
+const contact=mobs.find(m=>m.x===state.x&&m.y===state.y||Math.abs(m.x-state.x)+Math.abs(m.y-state.y)<=1);
+if(contact){
+const type=contact.type;
+const idx=mobs.indexOf(contact);mobs.splice(idx,1);
+const cell=mobCell(state.zone,mobs);mobs.push({...cell,type:mobType(state.zone),uid:'mob'+Math.floor(Math.random()*1e9)});
+startBattle(type);
+}
+}
+const mobMoveBase=move;
+move=function(dx,dy){
+if(!state||battle)return;
+const before=state.zone+':'+state.x+':'+state.y;
+mobMoveBase(dx,dy);
+if(!battle&&before!==state.zone+':'+state.x+':'+state.y){roamMobs();render();autoSave()}
+};
+const mobDrawBase=draw;
+draw=function(){
+mobDrawBase();
+if(!state||!MOB_ZONES.includes(state.zone))return;
+ensureMobs(state.zone);
+for(const m of state.worldMobs[state.zone]){
+ctx.font='23px sans-serif';ctx.fillText(m.type==='golem'?'🗿':m.type==='wolf'?'🐺':m.type==='slime'?'🟢':'⚔️',m.x*32+3,m.y*32+25);
+}
+};
+const mobRenderBase=render;
+render=function(){if(!state)return;mobRenderBase();
+const el=document.getElementById('location');
+if(MOB_ZONES.includes(state.zone)){ensureMobs(state.zone);el.title='10 roaming mobs · chase within 3 tiles · defeat one to respawn another'}
 };
 </script></body></html>
