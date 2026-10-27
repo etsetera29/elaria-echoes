@@ -915,4 +915,19 @@ if(isGolem){const qty=1+Math.floor(Math.random()*3);state.inv.golemshard=(state.
 const golemMoveBase=move;
 move=function(dx,dy){if(!state||battle)return;const zone=state.zone;golemMoveBase(dx,dy);
 if(!battle&&zone===state.zone&&['moonfall','cryptAntechamber','cryptArchive'].includes(zone)&&Math.random()<.13)startBattle('golem')};
+</script><script>
+const forgeRenderBase=render;
+render=function(){if(!state)return;forgeSetup();forgeRenderBase();
+const gear=document.getElementById('gear');let panel=document.getElementById('forgePanel');
+if(!panel){panel=document.createElement('div');panel.id='forgePanel';gear.after(panel)}
+let html='<h4>⚒ Equipment Enhancement</h4><p>Golem Temper Shards: '+count('golemshard')+' · Maximum +15 · New stat every third upgrade</p>';
+const owned=[];
+Object.entries(state.inv).forEach(([id,n])=>{if(n>0&&items[id]?.instance)owned.push({id,owner:'Inventory'})});
+allCharacters().forEach(p=>Object.values(p.gear||{}).forEach(id=>{if(items[id]?.instance)owned.push({id,owner:p.name})}));
+owned.forEach(({id,owner})=>{const it=items[id],cost=it.upgrade>=10?3:it.upgrade>=5?2:1;
+const details=Object.entries(it.substats).map(([k,v])=>k.toUpperCase()+' +'+v+(k==='crit'?'%':'')).join(' · ');
+html+='<div class="forge-item"><b class="rarity-'+it.rarity+'">'+it.name+' +'+it.upgrade+'</b><p>'+owner+' · '+details+'</p><button onclick="forgeUpgrade(\''+id+'\')" '+(battle||it.upgrade>=15||count('golemshard')<cost||state.gold<cost*20?'disabled':'')+'>'+(it.upgrade>=15?'MAX':'Upgrade: '+cost+' shards, '+cost*20+' gold')+'</button></div>';
+});panel.innerHTML=html;
+};
+render();
 </script></body></html>
