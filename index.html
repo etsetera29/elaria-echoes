@@ -1333,4 +1333,28 @@ render=function(){if(!state)return;mobRenderBase();
 const el=document.getElementById('location');
 if(MOB_ZONES.includes(state.zone)){ensureMobs(state.zone);el.title='10 roaming mobs · chase within 3 tiles · defeat one to respawn another'}
 };
-</script></body></html>
+</script><style>
+/* Tidebound Saga — oceanic visuals, transitions and readable story presentation */
+body{background:radial-gradient(ellipse at 80% 0%,#1d5368 0%,#1b2d4c 38%,#10182c 85%);background-attachment:fixed}
+.arc2-story{max-width:640px;margin:auto;line-height:1.8}
+.arc2-story h2{color:#aee9f5;text-shadow:0 2px 16px #3b98ac70;font-family:Georgia,serif;letter-spacing:.025em}
+.arc2-story p{margin:13px 0}
+.arc2-ornament{text-align:center;font-size:11px;letter-spacing:.22em;color:#b6d4ef}
+.arc2-voice{font-style:italic;color:#d8c4ff;border-left:3px solid #8e91da;padding:8px 12px;background:#273653}
+.arc2-story button{margin:5px 7px 5px 0;background:linear-gradient(120deg,#2c6585,#29426f);transition:transform .18s ease,filter .18s ease}
+.arc2-story button:hover{transform:translateY(-2px);filter:brightness(1.17)}
+#arc2Journal{border:1px solid #6d9bab;border-radius:10px;background:linear-gradient(135deg,#163e55,#202d52);padding:12px;margin:10px 0}
+#arc2Journal h4{color:#9fe2ef;margin:0 0 7px}
+#arc2Journal p{margin:6px 0}
+.arc2-shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.arc2-map-note{font-size:12px;color:#add9e6}
+#combatants .enemyTargetList{width:100%;padding:10px;background:#142f43;border:1px solid #618eac;border-radius:9px}
+#combatants .enemyTargetList button{margin:4px;min-height:42px}
+#world{transition:box-shadow .35s ease;box-shadow:0 0 22px #61c7e54a}
+#battleUI.active{animation:arc2BattleReveal .28s ease-out}
+@keyframes arc2BattleReveal{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.arc2-story{font-size:14px;line-height:1.6}.arc2-story button{width:100%;min-height:48px}#arc2Journal{padding:9px}}
+@media(prefers-reduced-motion:reduce){.arc2-story button,#world,#battleUI.active{animation:none;transition:none}}
+</style>
+<script src="arc2-data.js"></script>
+<script src="arc2-game.js"></script></body></html>
