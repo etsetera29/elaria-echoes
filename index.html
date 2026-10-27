@@ -696,13 +696,13 @@ if(!battle)return;
 const type=battle.enemy.type;
 const cryptBoss=type==='cryptsovereign';
 const earned=cryptBoss?800:type==='boss'?150:type==='bandit'?35:type==='wolf'?24:16;
-const before=allCharacters().map(p=>({id:p.id,level:p.level,exp:p.exp,points:p.attributePoints||0,award:p.attributeAwardedLevel||p.level}));
+const before=allCharacters().map(p=>({id:p.id,level:p.level,exp:p.exp,points:p.attributePoints||0,award:p.attributeAwardedLevel||p.level,maxhp:p.maxhp,hp:p.hp,atk:p.atk,def:p.def,spd:p.spd}));
 if(cryptBoss){battle.enemy.type='boss';battle.enemy.name='Echo Sovereign';}
 trainingVictoryBase();
 const hero=state.hero;
 before.forEach(old=>{
 const p=allCharacters().find(x=>x.id===old.id);if(!p)return;
-p.level=old.level;p.exp=old.exp;p.attributePoints=old.points;p.attributeAwardedLevel=old.award;
+p.level=old.level;p.exp=old.exp;p.attributePoints=old.points;p.attributeAwardedLevel=old.award;p.maxhp=old.maxhp;p.hp=old.hp;p.atk=old.atk;p.def=old.def;p.spd=old.spd;
 });
 levelCharacter(hero,earned);
 if(cryptBoss){
@@ -1129,7 +1129,7 @@ render();
 function applyPoisonTicks(actor){
 if(!battle)return;
 if(actor.id==='hero'||actor.id.startsWith('enemy')){
-for(const e of livingEnemies()){
+for(const e of (actor.id==='hero'?livingEnemies():livingEnemies().filter(e=>e.id===actor.id))){
 if(!e.poisonStacks?.length)continue;
 let damage=0;
 e.poisonStacks=e.poisonStacks.filter(t=>{damage+=20;t.remaining--;return t.remaining>0});
