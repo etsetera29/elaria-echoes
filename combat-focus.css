@@ -1,0 +1,156 @@
+/* Full battle view: exploration disappears until the encounter is over. */
+body.elaria-combat-mode {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at 50% 20%, #34436b 0%, #17223d 48%, #0a1225 100%);
+}
+body.elaria-combat-mode header {
+  justify-content: center;
+  padding: 12px 18px;
+  background: #121c36;
+  border-bottom: 1px solid #7c779d;
+}
+body.elaria-combat-mode header > div {
+  display: none !important;
+}
+body.elaria-combat-mode main {
+  display: block !important;
+  width: 100%;
+  max-width: 1190px;
+  margin: 0 auto;
+  padding: 12px;
+}
+body.elaria-combat-mode main > aside,
+body.elaria-combat-mode main > section > .panel:not(:first-child),
+body.elaria-combat-mode #world,
+body.elaria-combat-mode #exploreUI {
+  display: none !important;
+}
+body.elaria-combat-mode main > section {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+body.elaria-combat-mode main > section > .panel:first-child {
+  width: 100%;
+  min-height: calc(100dvh - 98px);
+  padding: clamp(12px, 2.8vw, 28px);
+  background: linear-gradient(160deg, #202d4b, #17233b 75%);
+  border: 1px solid #7584a9;
+  box-shadow: 0 18px 60px #050a1b77;
+}
+body.elaria-combat-mode #battleUI {
+  display: block !important;
+  width: 100%;
+  outline: none;
+  animation: elariaCombatFocusIn .25s ease-out;
+}
+body.elaria-combat-mode #battleTitle {
+  margin: 0 0 12px;
+  text-align: center;
+  color: #ffe4b2;
+  font-size: clamp(17px, 2.8vw, 26px);
+  line-height: 1.35;
+}
+body.elaria-combat-mode #combatStage {
+  width: 100%;
+  height: clamp(295px, 47dvh, 530px);
+  min-height: 295px;
+  margin: 12px 0 16px;
+  border-color: #aa9abe;
+  box-shadow: 0 10px 35px #050b2190, inset 0 0 50px #a7a2dc1a;
+}
+body.elaria-combat-mode #combatStage .stage-party,
+body.elaria-combat-mode #combatStage .stage-enemy {
+  bottom: 26px;
+}
+body.elaria-combat-mode #combatants {
+  margin: 12px 0;
+  justify-content: center;
+}
+body.elaria-combat-mode #battleActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px auto;
+}
+body.elaria-combat-mode #battleActions button {
+  min-width: 0;
+  min-height: 60px;
+  font-weight: 700;
+}
+body.elaria-combat-mode #turnQueue {
+  text-align: center;
+}
+body.elaria-combat-mode .elaria-combat-log {
+  padding: 12px 15px;
+  margin-top: 18px;
+  background: #101b32;
+  border: 1px solid #607393;
+  border-radius: 10px;
+}
+body.elaria-combat-mode .elaria-combat-log h4 {
+  margin: 0 0 9px;
+  color: #ebcf9d;
+  font-size: 14px;
+}
+body.elaria-combat-mode .elaria-combat-log-entries {
+  display: grid;
+  gap: 5px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+body.elaria-combat-mode .elaria-combat-log-entries p {
+  margin: 0;
+  line-height: 1.4;
+  font-size: 13px;
+  color: #d0dff1;
+}
+@keyframes elariaCombatFocusIn {
+  from { opacity: .35; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 720px) {
+  body.elaria-combat-mode header {
+    padding: 8px;
+  }
+  body.elaria-combat-mode main {
+    padding: 5px;
+  }
+  body.elaria-combat-mode main > section > .panel:first-child {
+    min-height: calc(100dvh - 62px);
+    padding: 10px;
+  }
+  body.elaria-combat-mode #combatStage {
+    height: clamp(215px, 37dvh, 350px);
+    min-height: 215px;
+  }
+  body.elaria-combat-mode #combatStage .stage-party,
+  body.elaria-combat-mode #combatStage .stage-enemy {
+    bottom: 16px;
+  }
+  body.elaria-combat-mode #battleActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  body.elaria-combat-mode #battleActions button {
+    min-height: 52px;
+  }
+  body.elaria-combat-mode .elaria-combat-log {
+    margin-top: 12px;
+    padding: 9px;
+  }
+}
+@media (max-width: 360px) {
+  body.elaria-combat-mode #combatStage {
+    height: 220px;
+  }
+  body.elaria-combat-mode #battleActions button {
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.elaria-combat-mode #battleUI {
+    animation: none;
+  }
+}
