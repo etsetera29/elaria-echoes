@@ -635,4 +635,236 @@ if(p.id==='seren')html=html.replace('--hair:#8461b2','--hair:#c2d8ec').replace('
 return html;
 };
 render();
+</script><style>
+#trainingHall{border:1px solid #8298c1;background:linear-gradient(135deg,#172a49,#1d2440);border-radius:12px;padding:12px;margin:10px 0}
+#trainingHall h4{color:#ffdc9b;margin:0 0 7px}
+.training-character{border-top:1px solid #ffffff22;padding:8px 0}
+.training-character button{margin:4px;min-height:36px}
+#world{max-width:100%;height:auto}
+.crypt-map-label{color:#ebc9ff}
+</style>
+<script>
+/* Final Moonfall arc: three crypt chapters, renewable boss, manual EXP and ascension. */
+items.expnote={name:'Traveler EXP Note (+120 EXP)',type:'item'};
+items.expfolio={name:'Scholar EXP Folio (+600 EXP)',type:'item'};
+items.expchronicle={name:'Ancient EXP Chronicle (+2500 EXP)',type:'item'};
+items.cryptcore={name:'Sovereign Echo Core',type:'item'};
+const ASCENSION_COST={20:5,40:25,60:55,80:100};
+const EXP_VALUES={expnote:120,expfolio:600,expchronicle:2500};
+function setupProgress(p){
+if(!p)return;
+if(!Number.isFinite(p.levelCap))p.levelCap=Math.min(100,Math.max(20,Math.ceil((p.level||1)/20)*20));
+if(!p.ascensionMaterial)p.ascensionMaterial='cryptcore';
+if(!Number.isFinite(p.exp))p.exp=0;
+}
+function levelCharacter(p,amount){
+setupProgress(p);
+p.exp+=amount;
+let levels=0;
+while(p.level<p.levelCap&&p.level<100&&p.exp>=p.level*70){
+p.exp-=p.level*70;p.level++;levels++;
+p.maxhp+=14;p.hp+=14;p.atk+=3;p.def+=2;p.spd+=2;
+ensureAttributes(p);p.attributePoints+=3;p.attributeAwardedLevel=p.level;
+}
+if(p.level>=p.levelCap)p.exp=Math.min(p.exp,p.level*70);
+if(levels)note(p.name+' reached level '+p.level+' and gained '+(levels*3)+' attribute points!');
+return levels;
+}
+function useExpItem(pid,itemId){
+if(battle||!EXP_VALUES[itemId]||count(itemId)<1)return;
+const p=allCharacters().find(p=>p.id===pid);
+if(!p)return;setupProgress(p);
+if(p.level>=p.levelCap){note(p.name+' must ascend before gaining more levels.');return}
+consume(itemId);levelCharacter(p,EXP_VALUES[itemId]);
+note(p.name+' received '+EXP_VALUES[itemId]+' EXP from '+items[itemId].name+'.');
+render();autoSave();
+}
+function ascendCharacter(pid){
+if(battle)return;
+const p=allCharacters().find(p=>p.id===pid);if(!p)return;
+setupProgress(p);
+const cost=ASCENSION_COST[p.levelCap];
+if(!cost||p.level<p.levelCap||count(p.ascensionMaterial)<cost)return;
+consume(p.ascensionMaterial,cost);
+p.levelCap+=20;
+note(p.name+' ascended! New level cap: '+p.levelCap+'.');
+render();autoSave();
+}
+const trainingVictoryBase=victory;
+victory=function(){
+if(!battle)return;
+const type=battle.enemy.type;
+const cryptBoss=type==='cryptsovereign';
+const earned=cryptBoss?800:type==='boss'?150:type==='bandit'?35:type==='wolf'?24:16;
+const before=allCharacters().map(p=>({id:p.id,level:p.level,exp:p.exp,points:p.attributePoints||0,award:p.attributeAwardedLevel||p.level}));
+if(cryptBoss){battle.enemy.type='boss';battle.enemy.name='Echo Sovereign';}
+trainingVictoryBase();
+const hero=state.hero;
+before.forEach(old=>{
+const p=allCharacters().find(x=>x.id===old.id);if(!p)return;
+p.level=old.level;p.exp=old.exp;p.attributePoints=old.points;p.attributeAwardedLevel=old.award;
+});
+levelCharacter(hero,earned);
+if(cryptBoss){
+state.flags.cryptDefeatedThisVisit=true;
+state.flags.cryptKills=(state.flags.cryptKills||0)+1;
+const amount=3+Math.floor(Math.random()*4);
+state.inv.cryptcore=(state.inv.cryptcore||0)+amount;
+gain('expchronicle');
+state.gold+=350;
+note('Echo Sovereign defeated! +'+amount+' Sovereign Echo Cores, +1 EXP Chronicle and +350 bonus gold.');
+if(state.flags.cryptChapter===7&&!state.flags.cryptFirstVictory){state.flags.cryptFirstVictory=true;cryptStory(8)}
+}
+if(!cryptBoss&&Math.random()<.45)gain(type==='boss'?'expfolio':'expnote');
+render();autoSave();
+};
+const trainingStartBattleBase=startBattle;
+startBattle=function(type){
+if(type==='cryptsovereign'){
+if(battle)return;
+const e={id:'enemy',type:'cryptsovereign',name:'Echo Sovereign',hp:780,maxhp:780,atk:44,def:22,spd:118,energy:0,clock:10000/118};
+battle={enemy:e,clocks:{},points:3,turn:null};
+members().forEach(p=>battle.clocks[p.id]=10000/Math.max(1,stats(p).spd));
+battle.clocks.enemy=e.clock;
+note('The Echo Sovereign awakens beneath the crypt!');
+nextTurn();render();return;
+}
+trainingStartBattleBase(type);
+};
+const trainingRenderBase=render;
+render=function(){
+if(!state)return;
+allCharacters().forEach(setupProgress);
+trainingRenderBase();
+const box=document.getElementById('attributePanel');
+if(!box)return;
+let el=document.getElementById('trainingHall');
+if(!el){el=document.createElement('div');el.id='trainingHall';box.after(el)}
+let html='<h4>✧ Character Training & Ascension</h4><p class="muted">Only your protagonist earns battle EXP. Train any character with EXP materials. Level caps: 20 / 40 / 60 / 80 / 100. Ascension costs: 5 / 25 / 55 / 100 boss cores.</p><p>Materials: Notes '+count('expnote')+' · Folios '+count('expfolio')+' · Chronicles '+count('expchronicle')+' · Sovereign Cores '+count('cryptcore')+'</p>';
+allCharacters().forEach(p=>{
+setupProgress(p);
+html+='<div class="training-character"><b>'+p.name+'</b> Lv.'+p.level+' / '+p.levelCap+' · EXP '+p.exp+'/'+(p.level*70)+'<div>';
+Object.keys(EXP_VALUES).forEach(id=>{html+='<button '+(battle||!count(id)||p.level>=p.levelCap?'disabled':'')+' onclick="useExpItem(\''+p.id+'\',\''+id+'\')">'+items[id].name+'</button>'});
+const cost=ASCENSION_COST[p.levelCap];
+if(cost)html+='<button '+(battle||p.level<p.levelCap||count(p.ascensionMaterial)<cost?'disabled':'')+' onclick="ascendCharacter(\''+p.id+'\')">Ascend ('+cost+' Cores)</button>';
+html+='</div></div>';
+});
+el.innerHTML=html;
+const labels={cryptAntechamber:'Moonfall: Hall of Ash',cryptArchive:'Moonfall: Archive of Names',cryptDepths:'Moonfall: Deepest Crypt'};
+if(labels[state.zone])document.getElementById('location').textContent=labels[state.zone];
+document.getElementById('quests').innerHTML+='<p>🌑 Final Moonfall Arc: '+(state.flags.cryptChapter||0)+'/9 · '+(state.flags.cryptArcDone?'Arc complete':state.flags.chapter4Done?'Find the sealed stairs in Moonfall Ruins':'Finish Chapter IV')+'</p><p>👑 Echo Sovereign: '+(state.flags.cryptKills||0)+' victories · farmable ascension cores</p>';
+};
+function cryptStory(step){
+const f=state.flags;if(f.cryptArcDone)return;
+if(step===5){f.cryptChapter=5;modal('<h2>Chapter VII: The Door Beneath the World</h2><p>At the bottom of the Archive, a black door carries the names of every soul lost when Elaria fell. A voice calls itself the Echo Sovereign: “I kept them alive by keeping them here.”</p><p>Kael recognizes the king’s seal. Lilia hears thousands of voices trapped in a single note. Seren whispers that her sister is among them.</p><p>Beyond this door lies the Deepest Crypt.</p><button onclick="closeModal()">Face the truth</button>')}
+else if(step===8){f.cryptChapter=8;modal('<h2>Chapter IX: The Last Echo</h2><p>The Sovereign’s crown fractures. Inside its light, the last king kneels before the memories of his people. “I tried to save them from death. I gave them an eternity without life.”</p><p>The souls ask to be released, but the kingdom’s knowledge would vanish with them. You must decide what Elaria leaves behind.</p><div class="story-choices"><button onclick="cryptEnding(\'release\')">Free the souls and let the kingdom rest</button><button onclick="cryptEnding(\'memory\')">Preserve their memories without imprisoning them</button></div>')}
+render();autoSave();
+}
+function cryptEnding(choice){
+if(state.flags.cryptArcDone)return;
+state.flags.cryptEnding=choice;state.flags.cryptArcDone=true;state.flags.cryptChapter=9;
+state.gold+=1200;gain('expchronicle');gain('expchronicle');
+modal('<h2>Moonfall Arc Finale: '+(choice==='release'?'A Dawn Without Chains':'The Song That Remains')+'</h2><p>'+(choice==='release'?'You shatter the crown. The dead rise as a constellation above Moonfall, free at last. Kael lays down his old oath; Lilia weeps as the church bells ring in Asteria. Seren hears her sister’s final goodbye.':'You break the crown’s chains but preserve the memories as a song. The spirits depart, while Seren records their voices for generations yet to come. Kael and Lilia vow to guard the truth rather than bury it.')+'</p><p>As sunrise reaches the deepest chamber, the fallen star stops weeping. The Echo Sovereign’s empty armor remains, its lingering shadow ready to challenge those seeking ascension.</p><p><b>Arc complete.</b> Reward: 1200 gold and 2 Ancient EXP Chronicles. The boss remains farmable after leaving and returning.</p><button onclick="closeModal()">Return to the world</button>');
+render();autoSave();
+}
+function enterCrypt(zone,x,y){
+state.zone=zone;state.x=x;state.y=y;
+if(zone==='cryptDepths')state.flags.cryptDefeatedThisVisit=false;
+render();autoSave();
+}
+const cryptMoveBase=move;
+move=function(dx,dy){
+if(!state||battle)return;
+const z=state.zone,x=state.x+dx,y=state.y+dy,f=state.flags;
+if(z==='moonfall'&&x===18&&y===11){
+if(!f.chapter4Done){note('The sealed stairway requires completion of Chapter IV.');return}
+if(!f.cryptChapter){f.cryptChapter=1;modal('<h2>Chapter V: Ashes of the First Kingdom</h2><p>Behind the Warden’s altar, stone stairs spiral downward. Kael finds the crest of the royal guard, buried beneath centuries of dust. The old order did not merely defend Elaria: it locked the survivors inside the ruins.</p><p>Lilia hears a hymn rising from below. “Someone is still singing,” she whispers.</p><button onclick="closeModal()">Descend into the Hall of Ash</button>')}
+enterCrypt('cryptAntechamber',1,6);return;
+}
+if(z==='cryptAntechamber'){
+if(x===0&&y===6){enterCrypt('moonfall',17,11);return}
+if(x===19&&y===6){if(f.cryptChapter<2){note('Examine the ashbound memorial at (10,4) first.');return}enterCrypt('cryptArchive',1,6);return}
+}
+if(z==='cryptArchive'){
+if(x===0&&y===6){enterCrypt('cryptAntechamber',18,6);return}
+if(x===19&&y===6){if(f.cryptChapter<5){note('Read the royal record at (10,4) first.');return}enterCrypt('cryptDepths',1,6);return}
+}
+if(z==='cryptDepths'){
+if(x===0&&y===6){enterCrypt('cryptArchive',18,6);return}
+if(Math.abs(x-15)+Math.abs(y-6)<=1&&!f.cryptDefeatedThisVisit){state.x=x;state.y=y;startBattle('cryptsovereign');return}
+}
+if(['cryptAntechamber','cryptArchive','cryptDepths'].includes(z)){
+if(x<0||x>=20||y<0||y>=13)return;
+state.x=x;state.y=y;
+if(z!=='cryptDepths'&&Math.random()<.09)startBattle(Math.random()<.5?'wolf':'bandit');
+render();autoSave();return;
+}
+cryptMoveBase(dx,dy);
+};
+const cryptInteractBase=interact;
+interact=function(){
+if(!state||battle)return;
+const f=state.flags,z=state.zone;
+if(z==='cryptAntechamber'){
+if(Math.abs(state.x-10)+Math.abs(state.y-4)<=2){
+if(f.cryptChapter===1){f.cryptChapter=2;modal('<h2>Chapter V: The Oath of Ash</h2><p>Names cover the memorial: guardians, healers, children. Kael finds his ancestor’s name carved beside the words “We obeyed, and the world ended.” He finally confesses that his order was founded to hide the royal betrayal.</p><p>“I will not inherit their silence,” he vows. The sealed gate to the Archive opens.</p><button onclick="closeModal()">Continue</button>')}
+else note('The ashbound names remain, finally witnessed.');
+}else if(Math.random()<.6)gain('expnote');else gain('expfolio');
+render();autoSave();return;
+}
+if(z==='cryptArchive'){
+if(Math.abs(state.x-10)+Math.abs(state.y-4)<=2){
+if(f.cryptChapter<5){f.cryptChapter=3;modal('<h2>Chapter VI: The Choir of Forgotten Names</h2><p>The Archive records the final night of Elaria. The king sought to protect his people from the falling star by binding every soul to a single living crown. The spell succeeded — and condemned them to endless waking dreams.</p><p>Lilia discovers the church’s sacred hymn was once the key to undoing the spell. Seren hears her sister’s voice among the choir. The three companions disagree: destroy the crown, or learn what it remembers?</p><button onclick="cryptArchiveDecision()">Decide what to preserve</button>')}
+else note('The archive has given up its darkest secret.');
+}else gain('expfolio');
+render();autoSave();return;
+}
+if(z==='cryptDepths'){
+if(Math.abs(state.x-15)+Math.abs(state.y-6)<=2&&!f.cryptDefeatedThisVisit){startBattle('cryptsovereign');return}
+if(f.cryptDefeatedThisVisit)note('The throne is silent. Leave the crypt and return to challenge the Sovereign again.');
+else note('A cold heartbeat echoes from the throne.');
+render();autoSave();return;
+}
+cryptInteractBase();
+};
+function cryptArchiveDecision(){
+const f=state.flags;if(f.cryptChapter>=5){closeModal();return}
+modal('<h2>Chapter VI: A Choice Before the End</h2><p>What will you carry to the throne?</p><div class="story-choices"><button onclick="cryptArchiveChoice(\'compassion\')">Lilia: The souls deserve release</button><button onclick="cryptArchiveChoice(\'truth\')">Kael: The kingdom must face its crimes</button><button onclick="cryptArchiveChoice(\'song\')">Seren: Their stories must not disappear</button></div>');
+}
+function cryptArchiveChoice(choice){
+if(state.flags.cryptChapter>=5)return;
+state.flags.cryptArchiveChoice=choice;
+state.flags.cryptChapter=5;
+modal('<h2>Chapter VI Complete: The Burden of Memory</h2><p>'+(choice==='compassion'?'You swear to end the suffering, no matter the cost. Lilia’s hymn glows against the darkness.':choice==='truth'?'You carry the royal record as evidence. Kael pledges to expose every lie.':'You copy the names into Seren’s songbook. Their stories will survive the fall of the crown.')+'</p><p>The final seal breaks. A staircase leads to the Deepest Crypt.</p><button onclick="closeModal()">Descend</button>');
+render();autoSave();
+}
+const cryptDrawBase=draw;
+draw=function(){
+if(!state||!['cryptAntechamber','cryptArchive','cryptDepths'].includes(state.zone)){cryptDrawBase();if(state?.zone==='moonfall'){ctx.fillStyle='#e9c4ff';ctx.font='13px sans-serif';ctx.fillText('SEALED STAIRS',15*32,10*32);ctx.fillStyle='#9374b9';ctx.fillRect(18*32,11*32,32,32)}return}
+const z=state.zone;
+ctx.clearRect(0,0,640,416);
+for(let y=0;y<13;y++)for(let x=0;x<20;x++){
+const v=rand(x+(z==='cryptDepths'?43:z==='cryptArchive'?29:17),y);
+ctx.fillStyle=v>.7?'#35314b':v>.35?'#2b2a42':'#24253a';ctx.fillRect(x*32,y*32,32,32);
+ctx.strokeStyle='#4d4763';ctx.strokeRect(x*32+.5,y*32+.5,31,31);
+if(v>.9){ctx.fillStyle='#675a83';ctx.fillRect(x*32+9,y*32+8,14,23)}
+}
+ctx.fillStyle='#84c8df';ctx.fillRect(0,192,32,32);
+if(z!=='cryptDepths'){ctx.fillStyle='#9b78bd';ctx.fillRect(608,192,32,32)}
+ctx.font='24px sans-serif';
+if(z==='cryptAntechamber'){ctx.fillText('🪦',10*32,4*32+24);ctx.fillStyle='#e4c7f3';ctx.font='13px sans-serif';ctx.fillText('MEMORIAL',9*32,4*32-8)}
+if(z==='cryptArchive'){ctx.fillText('📜',10*32,4*32+24);ctx.fillStyle='#e4c7f3';ctx.font='13px sans-serif';ctx.fillText('ROYAL RECORD',9*32,4*32-8)}
+if(z==='cryptDepths'){ctx.fillStyle='#625078';ctx.fillRect(13*32,4*32,5*32,5*32);ctx.fillStyle='#ab83d0';ctx.fillRect(15*32,6*32,32,32);ctx.font='33px sans-serif';ctx.fillText(state.flags.cryptDefeatedThisVisit?'✧':'👑',15*32,6*32+27);ctx.fillStyle='#f4ddff';ctx.font='13px sans-serif';ctx.fillText('ECHO SOVEREIGN',13*32,4*32-9)}
+const px=state.x*32,py=state.y*32;
+ctx.fillStyle='#1d2543';ctx.fillRect(px+8,py+26,6,5);ctx.fillRect(px+19,py+26,6,5);
+ctx.fillStyle='#7084c2';ctx.fillRect(px+7,py+18,19,9);
+ctx.fillStyle='#f6d4b8';ctx.fillRect(px+10,py+7,13,12);
+ctx.fillStyle='#57446d';ctx.fillRect(px+8,py+3,17,7);
+ctx.fillStyle='#ffffff';ctx.fillRect(px+12,py+12,3,3);
+};
+const cryptTalkBase=talk;
+talk=function(id){cryptTalkBase(id)};
+const cryptNewGameBase=newGame;
+newGame=function(){cryptNewGameBase();allCharacters().forEach(setupProgress);render();autoSave()};
+render();
 </script></body></html>
