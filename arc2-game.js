@@ -63,7 +63,8 @@ sunshore:{x:15,y:5,type:'reefbreaker',chapter:3},
 saltcave:{x:15,y:7,type:'herald',chapter:7},
 abyssalheart:{x:16,y:6,type:'leviathan',chapter:8}
 };
-const b=targets[z];if(!b||a.bosses[z+'Visit']||a.chapter<b.chapter)return;\nif(z==='sunshore'&&Object.keys(a.recruited).length<3){if(Math.abs(state.x-b.x)+Math.abs(state.y-b.y)<=2)note('Gather Brann, Selene and Pippa before confronting the Reefbreaker.');return}
+const b=targets[z];if(!b||a.bosses[z+'Visit']||a.chapter<b.chapter)return;
+if(z==='sunshore'&&Object.keys(a.recruited).length<3){if(Math.abs(state.x-b.x)+Math.abs(state.y-b.y)<=2)note('Gather Brann, Selene and Pippa before confronting the Reefbreaker.');return}
 if(Math.abs(state.x-b.x)+Math.abs(state.y-b.y)<=1){a.bosses[z+'Visit']=true;startBattle(b.type)}
 }
 const oldTravel=travelTo;
