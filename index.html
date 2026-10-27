@@ -982,7 +982,7 @@ if(!h.originalClass)h.originalClass=h.unlockedClasses[0];
 }
 function alternateClass(){
 ensureHeroClasses();
-const choices=Object.keys(classes).filter(c=>!state.hero.unlockedClasses.includes(c));
+const choices=Object.keys(classes).filter(c=>!state.hero.unlockedClasses.includes(c)&&(c!=='Witch'||state.hero.gender==='Female'));
 return choices.length?choices[Math.floor(Math.random()*choices.length)]:null;
 }
 function echoClassEvent(){
@@ -1026,7 +1026,7 @@ function switchHeroClass(next){
 if(!state||battle)return;
 ensureHeroClasses();
 const h=state.hero;
-if(!h.unlockedClasses.includes(next)||!classes[next]||h.cl===next)return;
+if(!h.unlockedClasses.includes(next)||!classes[next]||h.cl===next||(next==='Witch'&&h.gender!=='Female'))return;
 const prev=classes[h.cl],dest=classes[next];
 if(!prev)return;
 const oldMax=stats(h).maxhp;
@@ -1221,7 +1221,7 @@ if(p.cl==='Witch'){livingEnemies().forEach(t=>{hit(p,t,1);poisonEnemy(t)});p.ene
 }else if(kind==='ultimate'){
 if(p.energy<100)return;p.energy=0;
 if(p.cl==='Assassin'){p.assassinAoeTurns=2;hit(p,e,1);note('Phantom Dominion: AOE basics for 2 turns!');battle.clocks[p.id]=0}
-if(p.cl==='Gunner'){const bullets=p.bullets;hit(p,e,Math.max(0,bullets));p.bullets=8;note('Full Salvo: '+bullets+' bullets fired, instantly reloaded!')}
+if(p.cl==='Gunner'){const bullets=p.bullets;if(bullets>0)hit(p,e,bullets);p.bullets=8;note('Full Salvo: '+bullets+' bullets fired, instantly reloaded!')}
 if(p.cl==='Witch'){const stacks=e.poisonStacks?.length||0;for(let n=0;n<Math.max(1,stacks);n++)hit(p,e,2);note('Hex Cascade repeats '+Math.max(1,stacks)+' times!')}
 }
 if(finishEnemyWave())return;
