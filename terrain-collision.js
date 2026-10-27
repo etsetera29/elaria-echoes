@@ -41,17 +41,32 @@ return {x,y};
 }
 return previousMobCell(zone,used);
 };
-const previousRoam=roamMobs;
 roamMobs=function(){
-if(!state||battle)return;
-const zone=state.zone;
-if(!state.worldMobs?.[zone]){previousRoam();return}
-const mobs=state.worldMobs[zone];
-const before=mobs.map(m=>({x:m.x,y:m.y}));
-previousRoam();
+if(!state||battle||!MOB_ZONES.includes(state.zone))return;
+ensureMobs(state.zone);
+const mobs=state.worldMobs[state.zone];
 for(const m of mobs){
-const original=before.find((_,i)=>mobs[i]===m);
-if(original&&terrainBlocked(zone,m.x,m.y)){m.x=original.x;m.y=original.y}
+const distance=Math.abs(m.x-state.x)+Math.abs(m.y-state.y);
+let options=[];
+if(distance<=3){
+const dx=Math.sign(state.x-m.x),dy=Math.sign(state.y-m.y);
+options=Math.abs(state.x-m.x)>=Math.abs(state.y-m.y)?[[dx,0],[0,dy]]:[[0,dy],[dx,0]];
+}else{
+options=[[1,0],[-1,0],[0,1],[0,-1],[0,0]].sort(()=>Math.random()-.5);
+}
+for(const [dx,dy] of options){
+const x=m.x+dx,y=m.y+dy;
+if(x<1||x>18||y<1||y>11||terrainBlocked(state.zone,x,y)||mobs.some(other=>other!==m&&other.x===x&&other.y===y))continue;
+m.x=x;m.y=y;break;
+}
+}
+const contact=mobs.find(m=>m.x===state.x&&m.y===state.y||Math.abs(m.x-state.x)+Math.abs(m.y-state.y)<=1);
+if(contact){
+const type=contact.type,idx=mobs.indexOf(contact);
+mobs.splice(idx,1);
+const cell=mobCell(state.zone,mobs);
+mobs.push({...cell,type:mobType(state.zone),uid:'mob'+Math.floor(Math.random()*1e9)});
+startBattle(type);
 }
 };
 const previousEnsure=ensureMobs;
