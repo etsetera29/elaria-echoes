@@ -1183,4 +1183,93 @@ if(root){const list=livingEnemies().map(e=>'<button onclick="selectEnemy(\''+e.i
 root.innerHTML+='<div class="enemyTargetList"><b>Enemies: choose a target</b><div>'+list+'</div></div>';
 }
 };
+</script><script>
+const advancedHitBase=hit;
+hit=function(a,b,mul=1){
+if(a.id.startsWith('enemy')||b.id.startsWith('enemy')){
+const as=a.id.startsWith('enemy')?a:stats(a),bs=b.id.startsWith('enemy')?b:stats(b);
+let d=Math.max(1,Math.round((as.atk*mul-bs.def*.45)*(.9+Math.random()*.2)));
+b.hp=Math.max(0,b.hp-d);note(a.name+' deals '+d+' damage to '+b.name+'.');return d;
+}
+return advancedHitBase(a,b,mul);
+};
+const advancedStatsBase=stats;
+stats=function(p){
+const s=advancedStatsBase(p);
+if(p.cl==='Assassin'&&p.assassinBuff){s.atk+=p.assassinBuff.atk;s.spd+=p.assassinBuff.spd}
+return s;
+};
+function classTurnAction(kind){
+if(!battle||battle.turn==='enemy'||battle.turn.startsWith('enemy'))return;
+const p=members().find(x=>x.id===battle.turn);
+if(!p)return;
+const e=selectedEnemy();if(!e)return;
+const special=['Assassin','Gunner','Witch'].includes(p.cl);
+if(!special){const before=e.hp;const original=act;legacyClassAction(kind);return}
+if(p.cl==='Gunner'&&!Number.isFinite(p.bullets))p.bullets=8;
+if(kind==='basic'){
+if(p.cl==='Gunner'&&p.bullets<=0){note('Out of bullets! Use Reload.');render();return}
+if(p.cl==='Gunner')p.bullets--;
+if(p.cl==='Assassin'&&p.assassinAoeTurns>0){const all=livingEnemies(),center=all.indexOf(e);all.forEach((t,i)=>{if(Math.abs(i-center)<=1)hit(p,t,i===center?1.6:1.28)});p.assassinAoeTurns--}
+else{hit(p,e,1);if(p.cl==='Witch')poisonEnemy(e)}
+battle.points=Math.min(5,battle.points+1);p.energy=Math.min(100,p.energy+25);
+}else if(kind==='skill'){
+if(battle.points<1)return;battle.points--;
+if(p.cl==='Assassin'){p.assassinBuff={atk:Math.max(8,Math.round(p.atk*.25)),spd:Math.max(20,Math.round(p.spd*.25))};note('Phantom Acceleration! Attack and speed increased.');p.energy=Math.min(100,p.energy+35);battle.clocks[p.id]=0}
+if(p.cl==='Gunner'){p.bullets=8;note('Reloaded 8 bullets.');p.energy=Math.min(100,p.energy+35)}
+if(p.cl==='Witch'){livingEnemies().forEach(t=>{hit(p,t,1);poisonEnemy(t)});p.energy=Math.min(100,p.energy+35)}
+}else if(kind==='ultimate'){
+if(p.energy<100)return;p.energy=0;
+if(p.cl==='Assassin'){p.assassinAoeTurns=2;hit(p,e,1);note('Phantom Dominion: AOE basics for 2 turns!');battle.clocks[p.id]=0}
+if(p.cl==='Gunner'){const bullets=p.bullets;hit(p,e,Math.max(0,bullets));p.bullets=8;note('Full Salvo: '+bullets+' bullets fired, instantly reloaded!')}
+if(p.cl==='Witch'){const stacks=e.poisonStacks?.length||0;for(let n=0;n<Math.max(1,stacks);n++)hit(p,e,2);note('Hex Cascade repeats '+Math.max(1,stacks)+' times!')}
+}
+if(finishEnemyWave())return;
+nextTurn();render();autoSave();
+}
+const legacyClassAction=act;
+act=function(kind){
+if(!battle)return;
+const p=members().find(x=>x.id===battle.turn);
+if(p&&['Assassin','Gunner','Witch'].includes(p.cl)){classTurnAction(kind);return}
+if(p&&battle.enemies?.length>1){
+const e=selectedEnemy();battle.enemy=e;
+if(kind==='basic'){hit(p,e,1);battle.points=Math.min(5,battle.points+1);p.energy=Math.min(100,p.energy+25)}
+else if(kind==='skill'){if(battle.points<1)return;battle.points--;if(p.cl==='Priestess'){const t=members().filter(x=>x.hp>0).sort((a,b)=>a.hp/stats(a).maxhp-b.hp/stats(b).maxhp)[0];if(t)t.hp=Math.min(stats(t).maxhp,t.hp+55)}else hit(p,e,p.cl==='Mage'?2.1:1.65);p.energy=Math.min(100,p.energy+35)}
+else if(kind==='ultimate'){if(p.energy<100)return;p.energy=0;hit(p,e,3.3)}
+if(finishEnemyWave())return;nextTurn();render();autoSave();return;
+}
+legacyClassAction(kind);
+};
+const advancedUltimateBase=ultimate;
+ultimate=function(pid){
+if(!battle||battle.turn!==pid)return;
+const p=members().find(x=>x.id===pid);
+if(p&&['Assassin','Gunner','Witch'].includes(p.cl)){act('ultimate');return}
+if(battle.enemies?.length>1){act('ultimate');return}
+advancedUltimateBase(pid);
+};
+const advancedClassNameBase=currentUltimateName;
+currentUltimateName=function(p){
+if(p?.cl==='Assassin')return 'Phantom Dominion';
+if(p?.cl==='Gunner')return 'Full Salvo';
+if(p?.cl==='Witch')return 'Hex Cascade';
+return advancedClassNameBase(p);
+};
+const advancedRenderBase=render;
+render=function(){
+advancedRenderBase();if(!battle)return;
+const p=members().find(x=>x.id===battle.turn);
+if(!p)return;
+const root=document.getElementById('battleActions');
+if(!root)return;
+if(p.cl==='Assassin'||p.cl==='Gunner'||p.cl==='Witch'){
+const skill=root.querySelectorAll('button')[1];
+if(skill)skill.textContent=classes[p.cl].skill+' (1 SP)';
+if(p.cl==='Gunner'){
+const label=document.createElement('p');label.textContent='🔫 Ammunition: '+(p.bullets??8)+'/8';root.appendChild(label);
+if((p.bullets??8)<=0&&root.firstElementChild)root.firstElementChild.disabled=true;
+}
+}
+};
 </script></body></html>
