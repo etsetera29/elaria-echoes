@@ -13,7 +13,7 @@ enemy:{hair:'#3e4e66',coat:'#73527c',skin:'#a4b4be',eye:'#e77694'}
 };
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function appearance(p){
-const id=p?.id||'hero',base={...(looks[id]||looks.hero)};
+const id=p?.id||'hero',base={...(looks[id]||(id==='hero'?looks.hero:looks.enemy))};
 if(id==='hero'){
 const race=p?.race||'Human',gender=p?.gender||'Female';
 if(race==='Elf')base.hair=gender==='Male'?'#a7c5e1':'#b9c8ed';
@@ -82,7 +82,7 @@ if(header){
 const name=header.querySelector('span')?.textContent?.trim();
 const person=members().find(p=>p.name===name);
 const known={Kael:'kael',Lilia:'lilia',Seren:'seren',Brann:'brann',Selene:'selene',Pippa:'pippa'};
-const p=person||(known[name]?{id:known[name],name,gender:known[name]==='kael'||known[name]==='brann'?'Male':'Female'}:null);
+const p=person||(known[name]?{id:known[name],name,gender:known[name]==='kael'||known[name]==='brann'?'Male':'Female'}:(name?{id:'npc',name,gender:'Female'}:null));
 const img=header.querySelector('.anime-portrait');
 if(p&&img)img.outerHTML=window.elariaChibiTag(p,'story-chibi');
 }
