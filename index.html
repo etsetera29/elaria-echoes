@@ -447,4 +447,192 @@ render();autoSave();
 const churchRestBase=rest;
 rest=function(){churchRestBase();render()};
 render();
+</script><style>
+#partyManager{margin:10px 0;padding:12px;border:1px solid #9b8abf;border-radius:10px;background:linear-gradient(135deg,#293653,#222742)}
+#partyManager button{margin:3px}#partyManager .memberline{padding:9px;margin:7px 0;border-radius:8px;background:#111c34}
+#partyManager .active{color:#b9eebd}#partyManager .reserve{color:#c1c9d8}
+#partyManager h4{margin:0 0 6px;color:#ffe0a1}
+#partyManager select{margin:5px 0}
+.story-choices button{display:block;width:100%;text-align:left;margin:8px 0;padding:13px}
+</style>
+<script>
+/* The Third Echo: story expansion, recruitable support and editable 4-slot roster. */
+function allCharacters(){return [state.hero,...(state.party||[])]}
+function rosterSetup(){
+if(!state)return;
+if(!Array.isArray(state.activeParty))state.activeParty=['hero',...(state.party||[]).map(p=>p.id)].slice(0,4);
+state.activeParty=['hero',...state.activeParty.filter(id=>id!=='hero'&&state.party.some(p=>p.id===id))].slice(0,4);
+}
+members=function(){if(!state)return[];rosterSetup();return allCharacters().filter(p=>state.activeParty.includes(p.id)).sort((a,b)=>state.activeParty.indexOf(a.id)-state.activeParty.indexOf(b.id))};
+function availableForGear(){return allCharacters()}
+const equipAllBase=equip;
+equip=function(pid,id){const p=allCharacters().find(p=>p.id===pid);if(!p||!items[id]||!count(id))return;const slot=items[id].type;if(!['weapon','armor','accessory'].includes(slot))return;const old=p.gear[slot];consume(id);if(old)gain(old);p.gear[slot]=id;p.hp=Math.min(p.hp,stats(p).maxhp);render();autoSave()};
+unequip=function(pid,slot){const p=allCharacters().find(p=>p.id===pid);if(!p||!p.gear[slot])return;gain(p.gear[slot]);p.gear[slot]=null;render();autoSave()};
+const rosterUsePotion=usePotion;
+usePotion=function(pid){const p=allCharacters().find(p=>p.id===pid);if(!p||!count('potion'))return;consume('potion');p.hp=Math.min(stats(p).maxhp,p.hp+60);note(p.name+' recovers 60 HP.');render();autoSave()};
+const rosterAllocate=allocateAttribute;
+allocateAttribute=function(id,key){const p=allCharacters().find(p=>p.id===id);if(!p||!ATTRIBUTE_KEYS.includes(key))return;ensureAttributes(p);if(p.attributePoints<=0)return;p.attributes[key]++;p.attributePoints--;p.hp=Math.min(p.hp,stats(p).maxhp);render();autoSave()};
+function changeParty(id){
+if(battle)return;
+rosterSetup();
+if(id==='hero')return;
+if(!state.party.some(p=>p.id===id))return;
+if(state.activeParty.includes(id))state.activeParty=state.activeParty.filter(x=>x!==id);
+else if(state.activeParty.length<4)state.activeParty.push(id);
+else{note('Party is full: remove a companion before adding another.');return}
+render();autoSave();
+}
+function gearForReserve(pid,itemId){equip(pid,itemId)}
+function partyManagerDialog(){
+if(battle)return;
+rosterSetup();
+const unlocked=state.party.length;
+let html='<h2>Party Management</h2><p>The protagonist is always active. Maximum party size: 4. Companions not in the active party remain available for equipment and attribute management.</p><p>Unlocked companions: '+unlocked+'/3 · Active: '+state.activeParty.length+'/4</p>';
+allCharacters().forEach(p=>{const active=state.activeParty.includes(p.id);html+='<div class="memberline"><b>'+p.name+'</b> — '+p.cl+' · '+(active?'Active':'Reserve')+'<br>';
+if(p.id==='hero')html+='<span class="muted">Protagonist (cannot be removed)</span>';
+else html+='<button onclick="changeParty(\''+p.id+'\');partyManagerDialog()">'+(active?'Move to reserve':state.activeParty.length>=4?'Party full':'Add to party')+'</button>';
+html+='</div>'});
+html+='<button onclick="closeModal()">Done</button>';
+modal(html);
+}
+function makeSeren(){
+return {id:'seren',name:'Seren',cl:'Bard',race:'Elf',level:1,exp:0,hp:108,maxhp:108,atk:13,def:8,spd:119,energy:0,gear:{weapon:null,armor:null,accessory:null}};
+}
+function recruitSeren(){
+if(state.flags.serenJoined)return;
+state.flags.serenJoined=true;
+state.party.push(makeSeren());
+rosterSetup();
+if(state.activeParty.length<4)state.activeParty.push('seren');
+gain('starorb');note('Seren the support bard joined your roster!');
+modal('<h2>✦ Seren Joins the Adventure</h2><p>“I cannot silence the echoes. But I can teach them to sing with us.”</p><p>Seren specializes in supporting the team. Her skill grants a temporary attack boost and her ultimate inspires the entire party.</p><p>Reward: Astral Orb. Party management is now available.</p><button onclick="closeModal();render()">Welcome, Seren!</button>');
+render();autoSave();
+}
+function serenStory(){
+const f=state.flags;
+if(!f.seren1){f.seren1=true;modal('<h2>Seren — Part I: A Song Without Words</h2><p>A silver-haired traveling bard sits by the church steps, unable to remember the final verse of a song. She asks you to retrieve a Moonfall Crystal from the ruins to restore the melody.</p><button onclick="closeModal()">Accept</button>')}
+else if(!f.seren2){if(count('crystal')<1){modal('<h2>Seren — Part I</h2><p>“One Moonfall Crystal might help me remember the lost verse.”</p><button onclick="closeModal()">Close</button>');return}
+consume('crystal');f.seren2=true;
+modal('<h2>Seren — Part II: The Price of a Memory</h2><p>The crystal plays the voice of Seren’s lost sister. The melody is incomplete. Seren asks you to help her confront two forest bandits who stole her songbook.</p><p>Defeat 2 bandits, then return to her.</p><button onclick="closeModal()">We will help</button>');
+}else if(!f.serenJoined){if(state.kills.bandit<2){modal('<h2>Seren — Part II</h2><p>Defeat two forest bandits to recover Seren’s stolen songbook. Progress: '+state.kills.bandit+'/2.</p><button onclick="closeModal()">Close</button>');return}
+recruitSeren();
+}else modal('<h2>Seren</h2><p>“The next verse belongs to all of us.”</p><button onclick="closeModal()">Close</button>');
+render();autoSave();
+}
+function chapterFour(){
+const f=state.flags;
+if(!f.chapter3){modal('<h2>Elder Mira</h2><p>Complete the Moonfall story before continuing.</p><button onclick="closeModal()">Close</button>');return}
+if(!f.chapter4){
+f.chapter4=true;
+modal('<h2>Chapter IV: The Names We Buried</h2><p>Mira unveils a royal chronicle. The fallen stars were not weapons; they were seals holding back a forgotten consciousness. Kael’s order once guarded the seals, while Lilia’s church preserved the song that could close them.</p><p>Three witnesses disagree about the fate of Elaria. Seek their accounts: Kael, Lilia and Seren (if recruited).</p><button onclick="closeModal()">Begin investigation</button>');
+}else if(!f.chapter4Choice){
+const witnesses=['kael','lilia','seren'].filter(id=>f['witness_'+id]).length;
+if(witnesses<2){modal('<h2>Chapter IV: Gathering Testimony</h2><p>Speak to at least two companions about the lost kingdom. Testimonies: '+witnesses+'/2.</p><button onclick="closeModal()">Continue</button>');return}
+modal('<h2>Chapter IV: The Trial of Memory</h2><p>One echo demands a choice. Should the truth be revealed to Asteria, even if it causes panic? Or should the party guard the secret until the final seal is found?</p><div class="story-choices"><button onclick="chooseChapterFour(\'truth\')">Reveal the lost history to the villagers</button><button onclick="chooseChapterFour(\'silence\')">Protect Asteria by keeping the secret</button></div>');
+}else if(!f.chapter4Done){
+f.chapter4Done=true;state.gold+=180;gain(f.chapter4Choice==='truth'?'starstaff':'wardenseal');
+modal('<h2>Chapter IV Complete: '+(f.chapter4Choice==='truth'?'The Open Chronicle':'The Silent Covenant')+'</h2><p>'+(f.chapter4Choice==='truth'?'The villagers begin preparing together, though some fear the truth. Mira promises to stand beside you.':'Mira seals the chronicle. The village remains peaceful, but a few companions question the secrecy.')+'</p><p>Reward: 180 gold and rare equipment. Your decision will carry forward.</p><button onclick="closeModal()">Continue</button>');
+}else modal('<h2>Elder Mira</h2><p>“The path ahead will be shaped by the choice you made. For now, our story continues here in Asteria.”</p><button onclick="closeModal()">Close</button>');
+render();autoSave();
+}
+function chooseChapterFour(choice){if(state.flags.chapter4Choice)return;state.flags.chapter4Choice=choice;note('Chapter IV decision: '+(choice==='truth'?'Revealed the truth':'Kept the secret')+'.');chapterFour()}
+function companionWitness(id){
+if(!state.flags.chapter4||state.flags['witness_'+id])return false;
+state.flags['witness_'+id]=true;
+const lines={
+kael:'“The royal guard was ordered to destroy the seals. I refused. The kingdom fell because we obeyed a lie.”',
+lilia:'“The church called the echoes a curse. But our oldest hymn calls them sleeping guardians.”',
+seren:'“My sister sang the names of those lost. The stars remember people, not monsters.”'
+};
+modal('<h2>Chapter IV: '+(id==='kael'?'The Knight’s Testimony':id==='lilia'?'The Priestess’s Hymn':'The Bard’s Memory')+'</h2><p>'+lines[id]+'</p><button onclick="closeModal()">Remember this</button>');
+render();autoSave();return true;
+}
+function branchSideStory(id){
+const f=state.flags;
+if(id==='priest'&&f.chapter4&&!f.sideDawn){
+modal('<h2>Side Story: The Last Candle</h2><p>Father Lucien finds an old prayer that may restore the church’s missing records. Do you share the prayer with everyone or keep it with the clergy?</p><div class="story-choices"><button onclick="chooseSide(\'dawn\',\'share\')">Share the prayer with the town</button><button onclick="chooseSide(\'dawn\',\'guard\')">Entrust the prayer to Lucien</button></div>');return true}
+if(id==='merchant'&&f.chapter4&&!f.sideMarket){
+modal('<h2>Side Story: The Price of Trust</h2><p>A traveler claims the merchant sold counterfeit star crystals. The merchant insists the traveler is lying. What will you do?</p><div class="story-choices"><button onclick="chooseSide(\'market\',\'investigate\')">Investigate both accounts</button><button onclick="chooseSide(\'market\',\'refund\')">Ask the merchant to refund the traveler</button></div>');return true}
+return false;
+}
+function chooseSide(key,choice){
+const flag=key==='dawn'?'sideDawn':'sideMarket';if(state.flags[flag])return;
+state.flags[flag]=choice;
+const reward=key==='dawn'?(choice==='share'?'starrobe':'starorb'):(choice==='investigate'?'leafblade':'potion');
+state.gold+=90;gain(reward);
+const outcome=key==='dawn'?(choice==='share'?'The town gathers to sing the forgotten hymn. The church opens its archives to everyone.':'Lucien safeguards the prayer, promising to share it when the village is ready.'):(choice==='investigate'?'You discover a bandit swapped the crystals. The merchant’s reputation is restored.':'The refund settles the dispute, but the merchant wonders whether the traveler spoke truthfully.');
+modal('<h2>Side Story Complete</h2><p>'+outcome+'</p><p>Reward: 90 gold and '+items[reward].name+'. Your choice is permanent.</p><button onclick="closeModal()">Continue</button>');
+render();autoSave();
+}
+const storyTalkBase=talk;
+talk=function(id){
+if(id==='seren'){serenStory();return}
+if(id==='elder'&&state.flags.chapter3){chapterFour();return}
+if(['kael','lilia','seren'].includes(id)&&state.flags.chapter4&&!state.flags['witness_'+id]&&(id==='seren'?state.flags.serenJoined:state.flags[id+'Joined'])){companionWitness(id);return}
+if(branchSideStory(id))return;
+storyTalkBase(id);
+};
+const storyInteractBase=interact;
+interact=function(){
+if(state?.zone==='village'&&!battle&&Math.abs(state.x-13)+Math.abs(state.y-8)<=1){serenStory();return}
+storyInteractBase();
+};
+const storyDrawBase=draw;
+draw=function(){
+storyDrawBase();
+if(state?.zone==='village'){ctx.font='22px sans-serif';ctx.fillText('🎼',13*32+3,8*32+24);ctx.font='10px sans-serif';ctx.fillStyle='#f6e2bc';ctx.fillText('SEREN',13*32-2,8*32+35)}
+};
+const storyRenderBase=render;
+render=function(){
+rosterSetup();
+storyRenderBase();
+if(!state)return;
+let partyBox=document.getElementById('party');
+let mgr=document.getElementById('partyManager');
+if(!mgr){mgr=document.createElement('div');mgr.id='partyManager';partyBox.after(mgr)}
+const unlocked=state.party.length;
+mgr.innerHTML='<h4>Party Formation '+state.activeParty.length+'/4</h4><p class="muted">Protagonist is always active. '+unlocked+' companions unlocked.</p><button onclick="partyManagerDialog()" '+(battle?'disabled':'')+'>Edit Party Anywhere</button><p class="muted">Equip active or reserve companions from the inventory below.</p>';
+const bag=document.getElementById('gear');
+let reserve=allCharacters().filter(p=>!state.activeParty.includes(p.id));
+if(reserve.length){
+let html='<div class="panel"><h4>Reserve Equipment</h4>';
+reserve.forEach(p=>{html+='<p><b>'+p.name+'</b> (reserve)</p>';for(const slot of ['weapon','armor','accessory'])html+='<p>'+slot+': '+(p.gear[slot]?items[p.gear[slot]].name+' <button onclick="unequip(\''+p.id+'\',\''+slot+'\')">Remove</button>':'Empty')+'</p>';
+Object.keys(state.inv).filter(id=>count(id)>0&&['weapon','armor','accessory'].includes(items[id]?.type)).forEach(id=>{html+='<button onclick="gearForReserve(\''+p.id+'\',\''+id+'\')">Equip '+items[id].name+' to '+p.name+'</button> '});
+});html+='</div>';
+let el=document.getElementById('reserveGear');
+if(!el){el=document.createElement('div');el.id='reserveGear';bag.after(el)}
+el.innerHTML=html;
+}else document.getElementById('reserveGear')?.remove();
+document.getElementById('quests').innerHTML+='<p>🎼 Seren: '+(state.flags.serenJoined?'Recruited':state.flags.seren2?'Bandits '+state.kills.bandit+'/2':state.flags.seren1?'Bring 1 Moonfall Crystal':'Meet Seren near the church')+'</p><p>📜 Chapter IV: '+(state.flags.chapter4Done?'Completed':state.flags.chapter4?'Collect testimony and return to Mira':state.flags.chapter3?'Speak to Mira':'Locked')+'</p><p>🕯 Last Candle: '+(state.flags.sideDawn?'Completed':'Talk to Lucien after Chapter IV begins')+'</p><p>💰 Price of Trust: '+(state.flags.sideMarket?'Completed':'Talk to the merchant after Chapter IV begins')+'</p>';
+};
+const supportActBase=act;
+act=function(kind){
+if(battle&&kind==='skill'){
+const p=members().find(x=>x.id===battle.turn);
+if(p?.cl==='Bard'&&battle.points>=1){
+state.supportBuff={battles:2,atk:12,spd:8};
+members().forEach(t=>{if(t.hp>0)t.hp=Math.min(stats(t).maxhp,t.hp+12)});
+note('Seren performs Echoing Chorus: allies gain ATK and SPD, and recover 12 HP!');
+}
+}
+supportActBase(kind);
+};
+const supportStatsBase=stats;
+stats=function(p){
+const s=supportStatsBase(p);
+if(state?.supportBuff){s.atk+=state.supportBuff.atk;s.spd+=state.supportBuff.spd}
+return s;
+};
+const supportVictoryBase=victory;
+victory=function(){
+supportVictoryBase();
+if(state?.supportBuff){state.supportBuff.battles--;if(state.supportBuff.battles<=0){state.supportBuff=null;note('Echoing Chorus fades.')}autoSave()}
+};
+const storyPortraitBase=combatPortrait;
+combatPortrait=function(p,enemySide=false){
+let html=storyPortraitBase(p,enemySide);
+if(p.id==='seren')html=html.replace('--hair:#8461b2','--hair:#c2d8ec').replace('--outfit:#5d79bd','--outfit:#9270c2').replace('>⚔</div>','>♫</div>');
+return html;
+};
+render();
 </script></body></html>
