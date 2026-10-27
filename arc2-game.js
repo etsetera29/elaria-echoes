@@ -149,7 +149,11 @@ scene('Neriel — Elven Apothecary','<p>“Every tide brings a remedy, if you kn
 window.arc2Buy=function(id){const p=A.potions[id];if(!p||state.gold<p.price){note('Not enough gold.');return}state.gold-=p.price;gain(id);render();autoSave();apothecary()};
 window.arc2Sell=function(id){
 const ids=Object.keys(A.materials).filter(key=>!['leviathancore','reefcrest'].includes(key)&&count(key)>0);
-if(!id){scene('Neriel — Material Offers','<p>Choose which material to sell. Rare ascension cores are never sold automatically.</p>'+ids.map(key=>'<button onclick="arc2Sell(\\''+key+'\\')">'+A.materials[key]+' ×'+count(key)+' — 15 gold each</button>').join('')+'<button onclick="closeModal()">Leave</button>');return}
+if(!id){
+const offers=ids.map(key=>'<button data-id="'+key+'" onclick="arc2Sell(this.dataset.id)">'+A.materials[key]+' ×'+count(key)+' — 15 gold each</button>').join('');
+scene('Neriel — Material Offers','<p>Choose which material to sell. Rare ascension cores are protected.</p>'+offers+'<button onclick="closeModal()">Leave</button>');
+return;
+}
 if(!ids.includes(id))return;
 consume(id);state.gold+=15;note('Sold '+A.materials[id]+' for 15 gold.');render();autoSave();window.arc2Sell();
 };
