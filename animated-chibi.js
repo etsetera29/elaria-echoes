@@ -38,29 +38,153 @@ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 164" role="img"
 }
 window.elariaChibiSVG=svg;
 window.elariaChibiTag=(p,extra='')=>'<div class="elaria-chibi '+extra+'" aria-label="'+safe(p?.name||'Character')+' chibi">'+svg(p)+'</div>';
+/* Persistent stage actors: game.html rebuilds combatStage.innerHTML on every render.
+   Keep sprites as siblings of #combatStage so CSS timelines don't restart on every
+   stat, action, HP, or combat-log refresh. */
+let stagedBattle=null;
+let rosterSignature='';
+let actorNodes=new Map();
+function isReducedMotion(){
+  return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function combatActors(){
+  const teammates=members();
+  const enemies=(Array.isArray(battle?.enemies)&&battle.enemies.length?
+    battle.enemies:[battle?.enemy]).filter(Boolean);
+  const seen=new Set();
+  return {
+    teammates,
+    enemies:enemies.filter(p=>{
+      const key=String(p.id||p.name||'enemy');
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    })
+  };
+}
+function actorKey(p,enemySide,index){
+  return (enemySide?'foe:':'ally:')+String(p.id||index);
+}
+function makeActor(p,key,enemySide,index){
+  const sprite=document.createElement('div');
+  sprite.className='elaria-chibi-avatar elaria-chibi '+(enemySide?'enemy-chibi':'ally-chibi');
+  sprite.dataset.chibiId=key;
+  sprite.innerHTML=svg(p);
+  const nametag=document.createElement('span');
+  nametag.className='chibi-name';
+  nametag.textContent=p.name||'Enemy';
+  sprite.appendChild(nametag);
+  const health=document.createElement('div');
+  health.className='chibi-health';
+  const healthFill=document.createElement('span');
+  health.appendChild(healthFill);
+  sprite.appendChild(health);
+  sprite.style.setProperty('--chibi-delay',(-index*.43)+'s');
+  return sprite;
+}
+function prepareStage(stage){
+  let shell=document.getElementById('elariaChibiBattleStage');
+  if(!shell||!shell.contains(stage)){
+    shell=document.createElement('div');
+    shell.id='elariaChibiBattleStage';
+    shell.className='elaria-chibi-stage';
+    stage.parentNode.insertBefore(shell,stage);
+    shell.appendChild(stage);
+  }
+  let layer=document.getElementById('elariaPersistentChibis');
+  if(!layer){
+    layer=document.createElement('div');
+    layer.id='elariaPersistentChibis';
+    layer.className='elaria-persistent-chibis';
+    layer.setAttribute('aria-label','Animated combat characters');
+    const party=document.createElement('div');
+    party.className='chibi-combat-party';
+    const foes=document.createElement('div');
+    foes.className='chibi-combat-foes';
+    layer.appendChild(party);
+    layer.appendChild(foes);
+    shell.appendChild(layer);
+  }
+  return layer;
+}
+function syncSprites(){
+  if(!state||!battle)return;
+  const stage=document.getElementById('combatStage');
+  if(!stage||!stage.parentNode)return;
+  const layer=prepareStage(stage);
+  const actors=combatActors();
+  const membersAll=[
+    ...actors.teammates.map((p,i)=>({p,i,foe:false,key:actorKey(p,false,i)})),
+    ...actors.enemies.map((p,i)=>({p,i,foe:true,key:actorKey(p,true,i)}))
+  ];
+  const signature=membersAll.map(a=>a.key+':'+(a.p.type||a.p.cl||'')+':'+(a.p.race||'')+':'+(a.p.gender||'')).join('|');
+  if(battle!==stagedBattle||signature!==rosterSignature){
+    actorNodes.clear();
+    const party=layer.querySelector('.chibi-combat-party');
+    const foes=layer.querySelector('.chibi-combat-foes');
+    party.replaceChildren();
+    foes.replaceChildren();
+    for(const a of membersAll){
+      const node=makeActor(a.p,a.key,a.foe,a.i);
+      (a.foe?foes:party).appendChild(node);
+      actorNodes.set(a.key,node);
+    }
+    stagedBattle=battle;
+    rosterSignature=signature;
+  }
+  for(const a of membersAll){
+    const node=actorNodes.get(a.key);
+    if(!node)continue;
+    node.classList.toggle('current',battle.turn===a.p.id);
+    node.classList.toggle('defeated',a.p.hp<=0);
+    const name=node.querySelector('.chibi-name');
+    if(name&&name.textContent!==a.p.name)name.textContent=a.p.name||'Enemy';
+    const fill=node.querySelector('.chibi-health span');
+    if(fill){
+      const max=Math.max(1,Number(a.p.maxhp)||Number(a.p.hp)||1);
+      const hp=Math.max(0,Number(a.p.hp)||0);
+      fill.style.width=Math.min(100,(hp/max)*100)+'%';
+    }
+  }
+  layer.classList.toggle('motion-off',isReducedMotion());
+}
+function pulseActor(node,kind){
+  if(!node||isReducedMotion())return;
+  const classes=['chibi-striking','chibi-casting','chibi-hit-react'];
+  node.classList.remove(...classes);
+  // Restart an action even if the same actor makes two rapid consecutive attacks.
+  void node.offsetWidth;
+  const cls=kind==='hit'?'chibi-hit-react':kind==='skill'||kind==='ultimate'?'chibi-casting':'chibi-striking';
+  node.classList.add(cls);
+  const finish=()=>node.classList.remove(cls);
+  node.addEventListener('animationend',finish,{once:true});
+  setTimeout(finish,1050);
+}
+const baseCombatEffect=combatEffect;
+combatEffect=function(actorId,kind,targetId){
+  const result=baseCombatEffect(actorId,kind,targetId);
+  if(!battle)return result;
+  // Base attack VFX are inside the frequently refreshed battleStage;
+  // the persistent layer carries the animated character action itself.
+  const origin=actorNodes.get('ally:'+actorId)||actorNodes.get('foe:'+actorId);
+  const target=actorNodes.get('ally:'+targetId)||actorNodes.get('foe:'+targetId);
+  pulseActor(origin,kind);
+  if(kind!=='heal')pulseActor(target,'hit');
+  return result;
+};
 const baseRender=render;
 render=function(){
-baseRender();
-if(!battle||!state)return;
-const stage=document.getElementById('combatStage');
-if(!stage)return;
-const actors=members();
-stage.querySelectorAll('.fighter[data-combat-id]').forEach(node=>{
-const id=node.getAttribute('data-combat-id');
-const p=actors.find(a=>a.id===id)|| (id==='enemy'?battle.enemy:null) || (battle.enemies||[]).find(e=>e.id===id);
-if(!p)return;
-const head=node.querySelector('.head');
-if(head)head.style.backgroundImage='none';
-let sprite=node.querySelector('.elaria-chibi');
-if(!sprite){
-sprite=document.createElement('div');
-sprite.className='elaria-chibi combat-chibi';
-sprite.innerHTML=svg(p);
-node.insertBefore(sprite,node.querySelector('.nametag'));
-}
-node.classList.add('uses-chibi');
-});
+  baseRender();
+  if(state&&battle)syncSprites();
+  else if(!battle){
+    stagedBattle=null;
+    rosterSignature='';
+    actorNodes.clear();
+    const layer=document.getElementById('elariaPersistentChibis');
+    if(layer)layer.replaceChildren();
+  }
 };
+
 const baseModal=modal;
 modal=function(html){
 baseModal(html);
