@@ -37,6 +37,56 @@
 @keyframes elaria-fx{0%{opacity:0;transform:scale(.2) rotate(-30deg)}35%{opacity:1;transform:scale(1.2) rotate(0)}100%{opacity:0;transform:scale(1.8) rotate(30deg)}}
 @media(max-width:500px){#combatStage{min-height:200px}#combatStage .fighter{width:60px;transform:scale(.83);transform-origin:bottom center}#combatStage .stage-party{gap:0;left:0}#combatStage .stage-enemy{right:0}#combatStage .fighter.enemy{transform:scale(.95)}}
 @media(prefers-reduced-motion:reduce){#combatStage .fighter,#combatStage .fx{animation:none!important}}
+</style><style>
+/* Interface and adaptive controls */
+:root{--surface:#1c2745;--edge:#6076a1;--accent:#e8c88a}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.45}
+header{position:sticky;top:0;z-index:3;background:#151e36ef;backdrop-filter:blur(12px);border-bottom:1px solid #6d78a366;align-items:center;box-shadow:0 8px 24px #080e2099}
+header button{padding:7px 11px}
+.panel{background:linear-gradient(145deg,#263453,#18213d);border:1px solid #61749d88;box-shadow:0 7px 25px #05091466}
+.panel h3{margin:0 0 10px;color:#f4d69c;letter-spacing:.4px}
+button{transition:background .15s,transform .12s;touch-action:manipulation}
+button:active{transform:scale(.96)}
+button:focus-visible{outline:3px solid #f1d49c;outline-offset:2px}
+#battleUI .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#battleActions button{min-height:50px;font-weight:600;background:linear-gradient(135deg,#385785,#28395e);border-color:#879cc6}
+#battleActions button:last-child:not(:first-child){background:linear-gradient(135deg,#75539e,#493878);border-color:#bc9add}
+#combatants{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+#turnQueue{background:#111a30;border-radius:7px;padding:8px;line-height:1.6}
+#controls{display:grid;grid-template-columns:repeat(3,58px) minmax(90px,145px);grid-template-rows:repeat(3,48px);gap:5px;align-items:stretch;justify-content:center}
+#controls button{font-size:22px;font-weight:700;padding:0;background:#354d77;user-select:none;-webkit-user-select:none}
+#controls button:nth-child(1){grid-column:2;grid-row:1}
+#controls button:nth-child(2){grid-column:1;grid-row:2}
+#controls button:nth-child(3){grid-column:4;grid-row:1/4;font-size:15px;background:#6d4e8d}
+#controls button:nth-child(4){grid-column:3;grid-row:2}
+#controls button:nth-child(5){grid-column:2;grid-row:3}
+#controls:after{content:'✦';grid-column:2;grid-row:2;display:grid;place-items:center;color:#b6a8db}
+#combatStage .fighter.shield-bash{animation:shield-impact .7s ease-in-out 1!important}
+#combatStage .fighter.twin-strike{animation:twin-cut .7s ease-in-out 1!important}
+#combatStage .fighter.arcane-cast{animation:arcane-rise .8s ease-in-out 1!important}
+#combatStage .fighter.healing-cast{animation:healer-prayer .8s ease-in-out 1!important}
+#combatStage .combat-special{position:absolute;left:40%;top:26%;font-size:72px;z-index:7;pointer-events:none;filter:drop-shadow(0 0 15px #a7d7ff);animation:technique-fx .9s ease-out forwards}
+#combatStage .combat-special.shield{font-size:100px;color:#c5e6ff;animation:shield-fx .7s ease-out forwards}
+#combatStage .combat-special.twin{font-size:65px;color:#fff1d0;animation:twin-fx .8s ease-out forwards}
+#combatStage .combat-special.arcane{font-size:120px;color:#b3adff;animation:arcane-fx .9s ease-out forwards}
+#combatStage .combat-special.heal{color:#a9ffd5;animation:healing-fx 1s ease-out forwards}
+#combatStage .combat-special.ultimate{left:25%;top:14%;font-size:90px;color:#ffe7aa;animation:ultimate-fx 1s ease-out forwards}
+#combatStage .technique-name{position:absolute;left:0;right:0;top:7%;text-align:center;z-index:9;font-weight:800;letter-spacing:2px;color:#fff4d5;text-shadow:0 2px 12px #070a1c,0 0 15px #d1a8ef;animation:technique-title 1s ease-out forwards}
+@keyframes shield-impact{0%,100%{transform:translateX(0)}35%{transform:translateX(55px) rotate(-8deg)}58%{transform:translateX(100px) rotate(9deg) scale(1.12)}}
+@keyframes twin-cut{0%,100%{transform:translateX(0)}28%{transform:translateX(70px) rotate(-17deg)}50%{transform:translateX(35px) rotate(14deg)}75%{transform:translateX(95px) rotate(-12deg)}}
+@keyframes arcane-rise{0%,100%{transform:translateY(0)}40%{transform:translateY(-20px) scale(1.1);filter:drop-shadow(0 0 25px #a29dff)}}
+@keyframes healer-prayer{0%,100%{transform:translateY(0)}45%{transform:translateY(-18px);filter:drop-shadow(0 0 25px #a4ffd1)}}
+@keyframes technique-fx{0%{opacity:0;transform:scale(.3)}45%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes shield-fx{0%{opacity:0;transform:translateX(-80px) scale(.6) rotate(-35deg)}50%{opacity:1;transform:translateX(45px) scale(1.25) rotate(12deg)}100%{opacity:0;transform:translateX(90px) scale(1.6)}}
+@keyframes twin-fx{0%{opacity:0;transform:rotate(-50deg) scale(.5)}40%{opacity:1;transform:rotate(30deg) scale(1.3)}75%{opacity:1;transform:rotate(-30deg) scale(1.2)}100%{opacity:0;transform:scale(1.8)}}
+@keyframes arcane-fx{0%{opacity:0;transform:scale(.1) rotate(0)}50%{opacity:1;transform:scale(1.3) rotate(180deg)}100%{opacity:0;transform:scale(2) rotate(360deg)}}
+@keyframes healing-fx{0%{opacity:0;transform:translateY(50px) scale(.4)}50%{opacity:1;transform:translateY(-20px) scale(1.3)}100%{opacity:0;transform:translateY(-90px) scale(1.7)}}
+@keyframes ultimate-fx{0%{opacity:0;transform:scale(.2)}35%{opacity:1;transform:scale(1.6)}75%{opacity:1;transform:scale(1.3) rotate(20deg)}100%{opacity:0;transform:scale(2.4)}}
+@keyframes technique-title{0%{opacity:0;transform:translateY(-20px)}25%,70%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px)}}
+@media(min-width:801px){main{grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr)}#controls{grid-template-columns:repeat(3,48px) minmax(100px,130px);grid-template-rows:repeat(3,39px)}#controls button{font-size:19px}}
+@media(max-width:800px){body{font-size:14px}main{padding:8px}.panel{padding:10px}header{padding:9px 10px}#controls{grid-template-columns:repeat(3,62px) minmax(90px,135px);grid-template-rows:repeat(3,51px)}#controls button{min-height:48px}#battleActions button{min-height:56px}#combatStage{min-height:210px}}
+@media(max-width:420px){#controls{grid-template-columns:repeat(3,54px) minmax(88px,120px);grid-template-rows:repeat(3,47px)}#battleUI .actions{grid-template-columns:1fr 1fr}#battleActions button{font-size:12px;padding:8px 4px}header h1{font-size:15px}#combatStage .combat-special{font-size:54px}}
+@media(prefers-reduced-motion:reduce){#combatStage .combat-special,#combatStage .technique-name,#combatStage .fighter{animation:none!important}}
 </style></head><body><header><h1>✦ Elaria: Echoes of the Fallen Star</h1><div><span id="location">Asteria Village</span> · <span id="money" class="gold">0 G</span> · <button onclick="save()">Save</button> <button onclick="exportSave()">Export</button> <button onclick="document.getElementById('importFile').click()">Import</button><input id="importFile" type="file" accept=".json" hidden onchange="importSave(event)"></div></header>
 <main><section><div class="panel"><canvas id="world" width="640" height="416" aria-label="Pixel art exploration world"></canvas><div id="exploreUI"><div id="controls"><button onclick="move(0,-1)">↑</button><button onclick="move(-1,0)">←</button><button onclick="interact()">Interact / E</button><button onclick="move(1,0)">→</button><button onclick="move(0,1)">↓</button></div><p class="muted">WASD / arrows to move · E to interact · Walk into roaming enemies to battle. Blue portal leads to Whisperleaf Forest.</p></div><div id="battleUI"><h3 id="battleTitle"></h3><div id="turnQueue" class="muted"></div><div id="combatants"></div><div id="battleActions" class="actions"></div></div></div><div class="panel"><b>Adventure Journal</b><div id="log"></div></div></section>
 <aside><div class="panel"><h3>Party</h3><div id="party"></div><button onclick="rest()">Rest at Inn (20 G)</button></div><div class="panel"><h3>Quests</h3><div id="quests"></div></div><div class="panel"><h3>Inventory & Equipment</h3><div id="gear"></div></div><div class="panel"><h3>World Guide</h3><p class="muted">Village: speak to the Elder ✨, Kael ⚔️ and Lilia 💗. Forest: defeat enemies, collect resources and discover the Fallen Star. Return to recruit your companions after completing both chapters of their stories.</p></div></aside></main>
@@ -184,12 +234,22 @@ function combatEffect(actorId,kind,targetId){
 const stage=document.getElementById('combatStage');if(!stage)return;
 const actor=Array.from(stage.querySelectorAll('[data-combat-id]')).find(x=>x.dataset.combatId===actorId);
 const target=Array.from(stage.querySelectorAll('[data-combat-id]')).find(x=>x.dataset.combatId===targetId);
-if(actor){actor.classList.remove('current');actor.classList.add(kind==='ultimate'?'ultimate':kind==='skill'?'cast':'strike')}
-if(target)target.classList.add('hit');
-const fx=document.createElement('div');fx.className='fx '+(actorId==='lilia'&&kind!=='basic'?'heal':kind==='ultimate'?'ult':'');
-fx.textContent=actorId==='lilia'&&kind!=='basic'?'✿':kind==='ultimate'?'✦':'⚡';stage.appendChild(fx);
-fx.addEventListener('animationend',()=>fx.remove(),{once:true});
+const character=members().find(p=>p.id===actorId);
+const role=actorId==='enemy'?'enemy':character?.cl||'Warrior';
+const isHeal=role==='Priestess'&&kind!=='basic';
+let technique=kind==='basic'?'basic':kind==='ultimate'?'ultimate':role==='Warrior'?'shield':role==='Mage'?'arcane':role==='Rogue'?'twin':'heal';
+if(actor){actor.classList.remove('current');actor.classList.add(technique==='shield'?'shield-bash':technique==='twin'?'twin-strike':technique==='arcane'?'arcane-cast':isHeal?'healing-cast':kind==='ultimate'?'ultimate':'strike')}
+if(target&&!isHeal)target.classList.add('hit');
+const fx=document.createElement('div');fx.className='combat-special '+technique;
+const effects={basic:'⚔',shield:'🛡',arcane:'✦',twin:'⚔ ⚔',heal:'✿',ultimate:role==='Priestess'?'✿ ✦ ✿':role==='Mage'?'✧ ✦ ✧':role==='Rogue'?'⚔ ⚔ ⚔':'⚔ ✦',enemy:'⚡'};
+fx.textContent=effects[technique]||'⚔';
+stage.appendChild(fx);
+const name=document.createElement('div');name.className='technique-name';
+name.textContent=kind==='basic'?'Basic Attack':kind==='ultimate'?(role==='Priestess'?'Miracle Bloom':role==='Warrior'?'Oathbreaker':role==='Mage'?'Astral Cataclysm':'Shadow Tempest'):role==='Warrior'?'Shield Bash':role==='Mage'?'Arcane Burst':role==='Rogue'?'Twin Strike':'Healing Prayer';
+stage.appendChild(name);
+setTimeout(()=>{fx.remove();name.remove();actor?.classList.remove('shield-bash','twin-strike','arcane-cast','healing-cast','ultimate','strike');target?.classList.remove('hit')},1050);
 }
+
 const actBase=act;act=function(kind){
 if(!battle||battle.turn==='enemy')return;
 const actor=battle.turn;
@@ -206,6 +266,25 @@ nextTurn=function(){
 const enemyWillAct=battle?.turn==='enemy';
 nextTurnBase();
 if(enemyWillAct&&battle)combatEffect('enemy','basic',members().find(p=>p.hp>0)?.id||'hero');
+};
+render();
+</script><script>
+/* Desktop shortcuts only when combat is active; mobile keeps large touch buttons. */
+document.addEventListener('keydown',function(e){
+if(!battle||!document.getElementById('modal').classList.contains('hidden'))return;
+if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;
+if(e.repeat)return;
+if(e.key==='1'){e.preventDefault();act('basic')}
+else if(e.key==='2'){e.preventDefault();act('skill')}
+else if(e.key==='3'){e.preventDefault();const current=members().find(p=>p.id===battle?.turn);if(current)ultimate(current.id)}
+});
+/* Pointer controls: taps work on mobile and desktop; suppress double-tap zoom. */
+document.getElementById('controls').style.touchAction='manipulation';
+const oldCombatRender=render;
+render=function(){oldCombatRender();if(!battle)return;
+const help=document.getElementById('battleKeys')||document.createElement('p');
+help.id='battleKeys';help.className='muted';help.textContent='PC: 1 Basic · 2 Skill · 3 Current character Ultimate  |  Mobile: tap an action';
+document.getElementById('battleActions').after(help);
 };
 render();
 </script></body></html>
