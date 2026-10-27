@@ -130,7 +130,8 @@ scene(d?d.name:'Tidehaven',html);
 window.arc2Companion=companionTalk;window.arc2Side=sideTalk;
 function mayorTalk(){
 const a=arc();
-if(a.chapter===1){chapter(2);return}\nif(a.chapter===2){chapter(3);return}
+if(a.chapter===1){chapter(2);return}
+if(a.chapter===2){chapter(3);return}
 if(a.chapter===3){scene('Mayor Corven — The Broken Compact','<p>“Three strangers have been asking after our missing ships,” the mayor says. “The guardian, the swordswoman, the singer. If you wish to help us, take them to Sunshore and defeat the Reefbreaker that stalks our fishermen.”</p><p><b>Goal:</b> Recruit Brann, Selene and Pippa, then defeat the Reefbreaker.</p>');return}
 if(a.chapter===4&&!a.choices.festival){
 scene('Chapter XI — The Festival of Borrowed Names','<p>The mayor holds a ledger full of names crossed out in seawater. “If I publish this, the town may riot. If I burn it, the dead vanish again.”</p><p>Pippa begs for the truth. Brann asks whether the living can bear it. Selene says a hidden wound never heals.</p><button onclick="arc2Festival(\'reveal\')">Reveal the ledger</button><button onclick="arc2Festival(\'protect\')">Protect the town for now</button>');return}
