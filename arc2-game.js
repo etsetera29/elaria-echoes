@@ -272,7 +272,7 @@ for(const [x,y,icon] of [[4,3,'🏠'],[10,3,'🏛️'],[15,3,'🏠'],[3,9,'🏠'
 for(const [x,y,icon] of [[10,5,'👑'],[6,4,'🧝'],[14,4,'⚒️'],[6,9,'🛡️'],[12,9,'⚔️'],[16,9,'🎤'],[17,3,'🕯️']]){ctx.font='22px sans-serif';ctx.fillText(icon,x*32+4,y*32+26)}
 }
 if(z==='sunshore'||z==='saltcave'||z==='abyssalheart'){
-const markers=z==='sunshore'?[[15,5,'🦞']]:z==='saltcave'?[[15,7,'🔱'],[10,4,'🔮']]:[[16,6,'🐉']];
+const markers=z==='sunshore'?[[15,5,'🦞']]:z==='saltcave'?[[15,7,'🔱'],[6,3,'🔮'],[10,4,'🔮'],[14,9,'🔮']]:[[16,6,'🐉']];
 for(const [x,y,icon] of markers){ctx.font='25px sans-serif';ctx.fillText(icon,x*32+3,y*32+26)}
 ensureMobs(z);for(const m of state.worldMobs[z]){const data=A.enemies[m.type];ctx.font='22px sans-serif';ctx.fillText(data?.icon||'👾',m.x*32+3,m.y*32+26)}
 }
@@ -283,6 +283,13 @@ ctx.fillStyle='#fff';ctx.fillRect(state.x*32+12,state.y*32+12,3,3);
 ctx.font='bold 12px sans-serif';ctx.fillStyle='#fff0c0';ctx.fillText(p.name,12,19);
 ctx.font='11px sans-serif';ctx.fillStyle='#e5f7ff';ctx.fillText('← Exit',5,6*32-13);ctx.fillText('Next →',576,6*32-13);
 };
+window.arc2OpenJournal=function(){
+const a=arc();if(!a)return;
+const chapters=a.journal.map(j=>'<section class="arc2-journal-entry"><h4>Chapter '+esc(j.title)+'</h4><p>'+esc(j.scene)+'</p></section>').join('');
+const choices=Object.entries(a.choices).filter(([k])=>['festival','compact','ending'].includes(k)||k.startsWith('side_')).map(([k,v])=>'<p><b>'+esc(k.replace(/_/g,' '))+':</b> '+esc(v)+'</p>').join('');
+const bonds=A.characters.map(c=>'<p>'+esc(c.icon+' '+c.name)+': '+(a.recruited[c.id]?'Recruited':'Not yet recruited')+' · '+esc(c.story)+'</p>').join('');
+scene('The Tidebound Chronicle','<p>“Every name remembered is another light kept alive.”</p>'+chapters+'<h3>Decisions That Remain</h3>'+(choices||'<p>Your decisions have yet to be written.</p>')+'<h3>Companions of the Coast</h3>'+bonds);
+};
 const oldRender=render;
 render=function(){
 if(!state)return;
@@ -292,7 +299,7 @@ if(A.places[state.zone])document.getElementById('location').textContent=A.places
 let journal=document.getElementById('arc2Journal');
 if(!journal){journal=document.createElement('section');journal.id='arc2Journal';document.getElementById('quests').after(journal)}
 const c=A.chapters[Math.max(0,a.chapter-1)];
-journal.innerHTML='<h4>🌊 The Tidebound Saga</h4><p>'+(!ready()?'Complete the Moonfall crypt to unlock the coastal arc.':a.choices.ending?'Arc II complete — '+(a.choices.ending==='release'?'Memories Freed':'Memories Preserved'):c?'Chapter '+a.chapter+': '+esc(c.title):'Follow the coastal trail east of Whisperleaf Forest (19,10).')+'</p>'+(c&&!a.choices.ending?'<p>'+esc(c.objective)+'</p>':'')+'<p><small>Side stories completed: '+Object.values(a.side).filter(v=>v===3).length+'/'+A.sideStories.length+' · New companions: '+Object.keys(a.recruited).length+'/3</small></p>';
+journal.innerHTML='<h4>🌊 The Tidebound Saga</h4><p>'+(!ready()?'Complete the Moonfall crypt to unlock the coastal arc.':a.choices.ending?'Arc II complete — '+(a.choices.ending==='release'?'Memories Freed':'Memories Preserved'):c?'Chapter '+a.chapter+': '+esc(c.title):'Follow the coastal trail east of Whisperleaf Forest (19,10).')+'</p>'+(c&&!a.choices.ending?'<p>'+esc(c.objective)+'</p>':'')+'<p><small>Side stories completed: '+Object.values(a.side).filter(v=>v===3).length+'/'+A.sideStories.length+' · New companions: '+Object.keys(a.recruited).length+'/3</small></p><button onclick="arc2OpenJournal()">📖 Read Saga Journal</button>';
 const q=document.getElementById('quests');if(q&&ready()&&!a.chapter)q.innerHTML+='<p>🌊 A Letter Written in Salt: Find the coastal trail in Whisperleaf Forest (19,10).</p>';
 const map=document.getElementById('travelMap');if(map){const extra=document.createElement('p');extra.className='arc2-map-note';extra.textContent='Coastal routes: Forest → Tidehaven → Sunshore → Saltglass Cavern → Drowned Heart. Travel only to places already discovered.';map.appendChild(extra)}
 };
