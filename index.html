@@ -904,4 +904,15 @@ if(p.level>=p.levelCap){alert('Ascend before using EXP.');return}
 const v=expPlan(p,id,qty);
 const message='EXP gained: '+v.offered+'; projected level '+v.level+' / '+p.levelCap+(v.wasted?'; WARNING: '+v.wasted+' EXP will be wasted!':'; no EXP overflow')+'. Confirm consumption?';
 if(!confirm(message))return;consume(id,qty);levelCharacter(p,v.offered);render();autoSave()};
+</script><script>
+const golemStartBase=startBattle;
+startBattle=function(type){if(type!=='golem'){golemStartBase(type);return}if(battle)return;
+const e={id:'enemy',type:'golem',name:'Moonstone Golem',hp:225,maxhp:225,atk:28,def:19,spd:65,energy:0,clock:10000/65};
+battle={enemy:e,clocks:{},points:3,turn:null};members().forEach(p=>battle.clocks[p.id]=10000/Math.max(1,stats(p).spd));battle.clocks.enemy=e.clock;note('A Moonstone Golem rises!');nextTurn();render()};
+const golemVictoryBase=victory;
+victory=function(){if(!battle)return;const isGolem=battle.enemy.type==='golem';if(isGolem)battle.enemy.type='wolf';golemVictoryBase();
+if(isGolem){const qty=1+Math.floor(Math.random()*3);state.inv.golemshard=(state.inv.golemshard||0)+qty;note('Moonstone Golem dropped '+qty+' Temper Shards!');render();autoSave()}};
+const golemMoveBase=move;
+move=function(dx,dy){if(!state||battle)return;const zone=state.zone;golemMoveBase(dx,dy);
+if(!battle&&zone===state.zone&&['moonfall','cryptAntechamber','cryptArchive'].includes(zone)&&Math.random()<.13)startBattle('golem')};
 </script></body></html>
