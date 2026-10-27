@@ -63,7 +63,7 @@ if(holder.querySelector('.character-hub')||holder.querySelector('.cg-view'))retu
 const title=holder.querySelector('h2')?.textContent?.trim()||'';
 const plain=holder.textContent||'';
 const matches=entries.filter(e=>e.match?.test(title)||(e.category!=='Romance'&&e.match?.test(plain)));
-for(const entry of matches){if(!mark(entry.id))continue;showCollected(entry)}
+for(const entry of matches){const first=mark(entry.id);if(first)showCollected(entry);const dialog=document.getElementById('dialog');if(dialog&&!dialog.querySelector('.cg-scene-art')){const visual=document.createElement('div');visual.className='cg-scene-art';visual.innerHTML='<img src="'+sceneArt(entry)+'" alt="'+safe(entry.name)+'"><span>✦ COLLECTIBLE MEMORY · '+safe(entry.name)+'</span>';dialog.prepend(visual)}}
 }
 function showCollected(entry){
 const notice=document.createElement('div');notice.className='cg-notice';notice.innerHTML='<img src="'+sceneArt(entry)+'" alt=""><div><b>✦ New Memory Collected!</b><small>'+safe(entry.name)+'</small><button>View Illustration</button></div>';
