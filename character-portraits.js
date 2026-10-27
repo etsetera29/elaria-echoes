@@ -2,6 +2,7 @@
 (function(){
 'use strict';
 const palette={
+heroNonbinaryHuman:['#3d455f','#a8a4eb','#e8c5af','#31394b'],heroNonbinaryElf:['#c0c3df','#99b2dc','#efcebb','#404b6b'],heroNonbinaryBeastkin:['#a58b77','#d8b18e','#d9b5a2','#554554'],
 heroMaleHuman:['#292f4e','#79a9df','#e7c3a5','#20243c'],
 heroFemaleHuman:['#5a344c','#d6a4c9','#f0c8ac','#3b304b'],
 heroMaleElf:['#d2d9e8','#7ab6e0','#e8c7b5','#26374c'],
@@ -17,7 +18,7 @@ pippa:['#b77d71','#eea1bd','#f2c9b3','#70475a']
 };
 const encode=s=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
 function portrait(id,gender,race){
-const key=id==='hero'?'hero'+(gender==='Male'?'Male':'Female')+(race||'Human'):id;
+const key=id==='hero'?'hero'+(gender==='Male'?'Male':gender==='Nonbinary'?'Nonbinary':'Female')+(race||'Human'):id;
 const colors=palette[key]||palette.heroFemaleHuman,[hair,iris,skin,coat]=colors;
 const beast=key.includes('Beastkin')||id==='brann',elf=key.includes('Elf')||id==='selene';
 const masc=gender==='Male'||id==='kael'||id==='brann';
