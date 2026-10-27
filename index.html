@@ -1356,6 +1356,21 @@ body{background:radial-gradient(ellipse at 80% 0%,#1d5368 0%,#1b2d4c 38%,#10182c
 @media(max-width:600px){.arc2-story{font-size:14px;line-height:1.6}.arc2-story button{width:100%;min-height:48px}#arc2Journal{padding:9px}}
 @media(prefers-reduced-motion:reduce){.arc2-story button,#world,#battleUI.active{animation:none;transition:none}}
 </style>
+<style>
+#arc2Potions{margin:10px 0;padding:12px;background:#192d43;border:1px solid #588a99;border-radius:10px}
+#arc2Potions h4{color:#b8e8ed;margin:0 0 7px}
+#arc2Potions button{margin:4px;min-height:42px;background:linear-gradient(120deg,#245c73,#344777)}
+#arc2BattleDetails{padding:9px 12px;margin:10px 0;background:linear-gradient(110deg,#152a46,#234b5b);border:1px solid #638da9;border-radius:12px;animation:arc2BattleReveal .25s ease-out}
+.arc2-battle-header{display:flex;align-items:center;gap:10px}
+.arc2-battle-header small{display:block;color:#a9cfdf}
+.arc2-enemy-icon{font-size:38px;filter:drop-shadow(0 0 12px #a1e2ff);animation:arc2Hover 2.4s ease-in-out infinite}
+.arc2-party-icons{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.arc2-party-icons span{border:1px solid #557c9c;background:#203f5a;padding:6px 9px;border-radius:20px;font-size:12px}
+.arc2-journal-entry{border-bottom:1px solid #7799b14d;padding:7px 0}
+.arc2-journal-entry h4{color:#aee8ee;margin:4px 0}
+@keyframes arc2Hover{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.04)}}
+@media(prefers-reduced-motion:reduce){.arc2-enemy-icon,#arc2BattleDetails{animation:none}}
+</style>
 <script src="arc2-data.js"></script>
 <script src="arc2-game.js"></script>
 <script src="arc2-combat.js"></script></body></html>
