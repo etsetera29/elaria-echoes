@@ -4,7 +4,8 @@ const link=doc.createElement('link');link.rel='stylesheet';link.href='character-
 const hubCss=doc.createElement('link');hubCss.rel='stylesheet';hubCss.href='character-hub.css';doc.head.appendChild(hubCss);
 const chibiCss=doc.createElement('link');chibiCss.rel='stylesheet';chibiCss.href='animated-chibi.css';doc.head.appendChild(chibiCss);
 const galleryCss=doc.createElement('link');galleryCss.rel='stylesheet';galleryCss.href='story-gallery.css';doc.head.appendChild(galleryCss);
-for(const path of ['character-portraits.js','character-bonds.js','bond-story-variations.js','terrain-collision.js','small-face-icons.js','character-hub.js','animated-chibi.js','story-gallery.js']){
+const combatCss=doc.createElement('link');combatCss.rel='stylesheet';combatCss.href='combat-focus.css';doc.head.appendChild(combatCss);
+for(const path of ['character-portraits.js','character-bonds.js','bond-story-variations.js','terrain-collision.js','small-face-icons.js','character-hub.js','animated-chibi.js','story-gallery.js','combat-focus.js']){
 await new Promise((resolve,reject)=>{
 const el=doc.createElement('script');el.src=path;el.onload=resolve;el.onerror=reject;doc.body.appendChild(el);
 });
