@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171d36"><title>Elaria: Echoes of the Fallen Star</title><style>
-*{box-sizing:border-box}body{margin:0;background:#10162b;color:#f4eacb;font:15px system-ui,sans-serif}button,select,input{font:inherit}button{background:#293e68;color:#fff2cf;border:1px solid #6986ac;border-radius:7px;padding:9px;cursor:pointer}button:hover{background:#3b598c}button:disabled{opacity:.4}header{background:#1b2544;padding:10px 18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}h1{font-size:18px;margin:0;color:#ffe09c}main{max-width:1150px;margin:auto;padding:12px;display:grid;grid-template-columns:minmax(0,700px) minmax(270px,1fr);gap:12px}.panel{background:#1b2540;border:1px solid #48587a;border-radius:10px;padding:12px;margin-bottom:10px}canvas{width:100%;image-rendering:pixelated;background:#203c34;border-radius:7px;display:block}#log{height:130px;overflow:auto;font-size:13px;line-height:1.6}#controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}.stats{font-size:13px;line-height:1.8}.pill{display:inline-block;background:#344b71;border-radius:20px;padding:3px 9px;margin:3px}.gold{color:#ffd17a}.modal{position:fixed;inset:0;background:#090e1bdc;display:flex;align-items:center;justify-content:center;padding:15px;z-index:4}.modal.hidden{display:none}.dialog{background:#202c4c;border:2px solid #879ac2;border-radius:12px;padding:20px;width:min(680px,100%);max-height:90vh;overflow:auto}label{display:block;margin:10px 0}select,input{width:100%;padding:9px;background:#101a32;color:white;border:1px solid #7184ac;border-radius:6px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.muted{color:#bdc6d9;font-size:13px}.enemy{color:#ffaaa5}.ally{color:#a6e7b5}#party,#quests,#gear{line-height:1.6}#battleUI{display:none}#battleUI.active{display:block}#exploreUI.hidden{display:none}@media(max-width:800px){main{display:block}header{font-size:12px}button{padding:11px}}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#30365d,#10162b 70%);color:#f4eacb;font:15px system-ui,sans-serif}button,select,input{font:inherit}button{background:#293e68;color:#fff2cf;border:1px solid #6986ac;border-radius:7px;padding:9px;cursor:pointer}button:hover{background:#3b598c}button:disabled{opacity:.4}header{background:#1b2544;padding:10px 18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}h1{font-size:18px;margin:0;color:#ffe09c}main{max-width:1150px;margin:auto;padding:12px;display:grid;grid-template-columns:minmax(0,700px) minmax(270px,1fr);gap:12px}.panel{background:#1b2540;border:1px solid #48587a;border-radius:10px;padding:12px;margin-bottom:10px}canvas{width:100%;image-rendering:pixelated;border:3px solid #8b83b9;box-shadow:0 0 22px #737db744;background:#203c34;border-radius:7px;display:block}#log{height:130px;overflow:auto;font-size:13px;line-height:1.6}#controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}.stats{font-size:13px;line-height:1.8}.pill{display:inline-block;background:#344b71;border-radius:20px;padding:3px 9px;margin:3px}.gold{color:#ffd17a}.modal{position:fixed;inset:0;background:#090e1bdc;display:flex;align-items:center;justify-content:center;padding:15px;z-index:4}.modal.hidden{display:none}.dialog{background:#202c4c;border:2px solid #879ac2;border-radius:12px;padding:20px;width:min(680px,100%);max-height:90vh;overflow:auto}label{display:block;margin:10px 0}select,input{width:100%;padding:9px;background:#101a32;color:white;border:1px solid #7184ac;border-radius:6px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.muted{color:#bdc6d9;font-size:13px}.enemy{color:#ffaaa5}.ally{color:#a6e7b5}#party,#quests,#gear{line-height:1.6}#battleUI{display:none}#battleUI.active{display:block}#exploreUI.hidden{display:none}@media(max-width:800px){main{display:block}header{font-size:12px}button{padding:11px}}
 </style></head><body><header><h1>✦ Elaria: Echoes of the Fallen Star</h1><div><span id="location">Asteria Village</span> · <span id="money" class="gold">0 G</span> · <button onclick="save()">Save</button> <button onclick="exportSave()">Export</button> <button onclick="document.getElementById('importFile').click()">Import</button><input id="importFile" type="file" accept=".json" hidden onchange="importSave(event)"></div></header>
 <main><section><div class="panel"><canvas id="world" width="640" height="416" aria-label="Pixel art exploration world"></canvas><div id="exploreUI"><div id="controls"><button onclick="move(0,-1)">↑</button><button onclick="move(-1,0)">←</button><button onclick="interact()">Interact / E</button><button onclick="move(1,0)">→</button><button onclick="move(0,1)">↓</button></div><p class="muted">WASD / arrows to move · E to interact · Walk into roaming enemies to battle. Blue portal leads to Whisperleaf Forest.</p></div><div id="battleUI"><h3 id="battleTitle"></h3><div id="turnQueue" class="muted"></div><div id="combatants"></div><div id="battleActions" class="actions"></div></div></div><div class="panel"><b>Adventure Journal</b><div id="log"></div></div></section>
 <aside><div class="panel"><h3>Party</h3><div id="party"></div><button onclick="rest()">Rest at Inn (20 G)</button></div><div class="panel"><h3>Quests</h3><div id="quests"></div></div><div class="panel"><h3>Inventory & Equipment</h3><div id="gear"></div></div><div class="panel"><h3>World Guide</h3><p class="muted">Village: speak to the Elder ✨, Kael ⚔️ and Lilia 💗. Forest: defeat enemies, collect resources and discover the Fallen Star. Return to recruit your companions after completing both chapters of their stories.</p></div></aside></main>
@@ -54,4 +54,75 @@ function exportSave(){if(!state)return;let blob=new Blob([JSON.stringify(state,n
 function importSave(e){let file=e.target.files[0];if(!file)return;file.text().then(t=>{try{let s=JSON.parse(t);if(!s.hero||!s.zone||!s.inv)throw Error('Invalid save');state=s;battle=null;autoSave();render();note('Save imported.')}catch(err){alert('Invalid save file')}})}
 document.addEventListener('keydown',e=>{if(!state||battle||!document.getElementById('modal').classList.contains('hidden')||['INPUT','SELECT'].includes(document.activeElement.tagName))return;let keys={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]};if(keys[e.key]){e.preventDefault();move(...keys[e.key])}if(e.key==='e'||e.key==='Enter')interact()});
 try{let saved=JSON.parse(localStorage.getItem('elaria-save-v1'));if(saved?.hero&&saved?.inv){state=saved;render();note('Welcome back! Your journey continues.')}else showCreate()}catch(e){showCreate()}
+</script><script>
+/* Moonfall expansion — keeps legacy local saves compatible. */
+Object.assign(items,{
+wardenblade:{name:'Moonfall Wardenblade',type:'weapon',atk:18,set:'Moonfall Warden'},
+wardencoat:{name:'Moonfall Wardenplate',type:'armor',def:12,hp:25,set:'Moonfall Warden'},
+wardenseal:{name:'Moonfall Warden Sigil',type:'accessory',spd:24,set:'Moonfall Warden'},
+crystal:{name:'Moonfall Crystal',type:'item'},
+moonpetal:{name:'Silver Moonpetal',type:'item'}
+});
+const originalStats=stats;stats=function(p){let s=originalStats(p),n=Object.values(p.gear).filter(id=>id&&items[id]?.set==='Moonfall Warden').length;if(n>=2)s.def+=12;if(n>=3){s.atk+=15;s.spd+=15}return s};
+const originalMove=move;move=function(dx,dy){
+if(!state||battle)return;
+let x=state.x+dx,y=state.y+dy;
+if(state.zone==='forest'&&x===19&&y===6){state.zone='moonfall';state.x=1;state.y=6;state.flags.bossDefeatedThisVisit=false;note('Moonfall Ruins: an ancient Warden guards the altar.');render();autoSave();return}
+if(state.zone==='moonfall'&&x===0&&y===6){state.zone='forest';state.x=18;state.y=6;note('You leave the ruins. The Warden will respawn on your next visit.');render();autoSave();return}
+if(state.zone==='moonfall'){if(x<0||x>=W||y<0||y>=H)return;state.x=x;state.y=y;
+if(Math.abs(x-15)+Math.abs(y-5)<=1&&!state.flags.bossDefeatedThisVisit)startBattle('boss');
+else if(Math.random()<.12)startBattle(Math.random()<.5?'wolf':'bandit');
+render();autoSave();return}
+originalMove(dx,dy)
+};
+const originalInteract=interact;interact=function(){
+if(state?.zone==='moonfall'&&!battle){
+if(Math.abs(state.x-15)+Math.abs(state.y-5)<=2&&!state.flags.bossDefeatedThisVisit)startBattle('boss');
+else if(Math.random()<.5){gain('crystal');note('You gathered a Moonfall Crystal.')}else{gain('moonpetal');note('You gathered a Silver Moonpetal.')}
+render();autoSave();return}
+originalInteract()
+};
+const originalTalk=talk;talk=function(id){
+let f=state.flags;
+if(id==='elder'&&f.mainDone){
+if(!f.chapter2){f.chapter2=true;modal('<h2>Chapter II: The Moonfall Oath</h2><p>“Beyond the eastern edge of Whisperleaf lies Moonfall Ruins. Defeat the ancient Warden guarding the second echo, then return to me.”</p><button onclick="closeModal()">I will go</button>')}
+else if((f.wardenKills||0)>0&&!f.chapter2Done){f.chapter2Done=true;state.gold+=250;gain('wardenseal');modal('<h2>Chapter II Complete</h2><p>Kael recognizes the sentinel’s insignia. The Warden protected the vanished kingdom of Elaria. Your next clue points to the northern mountains.</p><p>Reward: 250 gold and Moonfall Warden Sigil.</p><button onclick="closeModal()">Continue</button>')}
+else if(f.chapter2Done&&!f.chapter3){f.chapter3=true;modal('<h2>Chapter III: A Promise Beneath the Stars</h2><p>Lilia hears a sacred song within the echo. Kael reveals that his former order guarded these very ruins. The road to the mountains will open in a future chapter.</p><button onclick="closeModal()">Continue</button>')}
+else originalTalk(id);
+render();autoSave();return
+}
+if(id==='merchant'){
+if(f.merchantQuest&&!f.merchantDone&&count('crystal')>=3){consume('crystal',3);f.merchantDone=true;state.gold+=120;gain('leafblade');modal('<h2>Side Story Complete: Lost Caravan</h2><p>The merchant thanks you for the three Moonfall Crystals. Reward: Whisperleaf Saber and 120 gold.</p><button onclick="closeModal()">Close</button>')}
+else modal('<h2>Merchant — The Lost Caravan</h2><p>Collect 3 Moonfall Crystals from the ruins. Progress: '+count('crystal')+'/3.</p><button onclick="buyPotion()">Buy Potion (25 G)</button> <button onclick="state.flags.merchantQuest=true;closeModal();render()">Accept Quest</button> <button onclick="closeModal()">Leave</button>');
+render();autoSave();return
+}
+if(id==='inn'){
+if(f.innQuest&&!f.innDone&&count('moonpetal')>=3){consume('moonpetal',3);f.innDone=true;state.gold+=100;gain('starrobe');modal('<h2>Side Story Complete: Moonlight Tea</h2><p>Three Silver Moonpetals will heal weary travelers. Reward: Astral Robe and 100 gold.</p><button onclick="closeModal()">Close</button>')}
+else modal('<h2>Innkeeper — Moonlight Tea</h2><p>Collect 3 Silver Moonpetals from Moonfall Ruins. Progress: '+count('moonpetal')+'/3.</p><button onclick="state.flags.innQuest=true;closeModal();render()">Accept Quest</button> <button onclick="closeModal();rest()">Rest (20 G)</button> <button onclick="closeModal()">Leave</button>');
+render();autoSave();return
+}
+originalTalk(id)
+};
+const originalVictory=victory;victory=function(){
+if(battle?.enemy?.type==='boss'){state.flags.bossDefeatedThisVisit=true;state.flags.wardenKills=(state.flags.wardenKills||0)+1;let drop=['wardenblade','wardencoat','wardenseal'][(state.flags.wardenKills-1)%3];gain(drop);note('The Moonfall Warden drops '+items[drop].name+'! Its spirit will reform when you leave and return.')}
+originalVictory()
+};
+const originalRender=render;render=function(){
+originalRender();if(!state)return;
+if(state.zone==='moonfall')document.getElementById('location').textContent='Moonfall Ruins';
+let q=document.getElementById('quests');q.innerHTML+='<p>🌙 Moonfall Oath: '+(state.flags.chapter2Done?'Complete':state.flags.chapter2?'Defeat the Warden and report to Mira':'Finish Chapter I')+'</p><p>📦 Lost Caravan: '+(state.flags.merchantDone?'Complete':count('crystal')+'/3 crystals')+'</p><p>🍵 Moonlight Tea: '+(state.flags.innDone?'Complete':count('moonpetal')+'/3 petals')+'</p>';
+document.getElementById('gear').innerHTML+='<p class="muted">Moonfall Warden set: 2 pieces +12 DEF; 3 pieces +15 ATK and +15 SPD. Boss drops rotate through the three pieces.</p>';
+};
+const originalDraw=draw;draw=function(){
+if(state.zone==='moonfall'){
+ctx.clearRect(0,0,640,416);
+for(let y=0;y<13;y++)for(let x=0;x<20;x++){let v=rand(x,y);ctx.fillStyle=v<.35?'#344663':v<.7?'#425776':'#506687';ctx.fillRect(x*32,y*32,32,32);ctx.strokeStyle='#6a7d9b';ctx.strokeRect(x*32+.5,y*32+.5,31,31);if(v>.87){ctx.fillStyle='#9ab4ce';ctx.fillRect(x*32+11,y*32+7,10,22);ctx.fillStyle='#c3d6e7';ctx.fillRect(x*32+8,y*32+4,16,5)}}
+ctx.fillStyle='#7cc7e9';ctx.fillRect(0,192,32,32);ctx.fillStyle='#9381b9';ctx.fillRect(14*32,4*32,96,96);ctx.fillStyle='#67518b';ctx.fillRect(15*32,5*32,32,32);ctx.font='26px sans-serif';ctx.fillText(state.flags.bossDefeatedThisVisit?'✧':'👑',15*32,5*32+26);ctx.font='12px sans-serif';ctx.fillStyle='#f1e2ff';ctx.fillText('MOONFALL WARDEN',13*32+10,4*32-10);
+}else originalDraw();
+let x=state.x*32,y=state.y*32;if(state.zone==='moonfall'||state.zone==='village'||state.zone==='forest'){
+ctx.fillStyle='#18233d';ctx.fillRect(x+8,y+26,6,5);ctx.fillRect(x+19,y+26,6,5);ctx.fillStyle='#6373bf';ctx.fillRect(x+7,y+18,19,9);ctx.fillStyle='#a5c9f2';ctx.fillRect(x+10,y+19,13,5);ctx.fillStyle='#f8d3b5';ctx.fillRect(x+10,y+7,13,12);ctx.fillStyle='#493e6b';ctx.fillRect(x+8,y+3,17,7);ctx.fillRect(x+7,y+7,4,10);ctx.fillStyle='#f5f7ff';ctx.fillRect(x+12,y+12,3,3);ctx.fillRect(x+20,y+12,2,3);
+}
+if(state.zone==='forest'){ctx.fillStyle='#aa8bff';ctx.fillRect(608,192,32,32);ctx.fillStyle='#f3e4ff';ctx.font='11px sans-serif';ctx.fillText('RUINS',574,184)}
+};
+render();
 </script></body></html>
