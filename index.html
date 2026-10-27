@@ -867,4 +867,33 @@ talk=function(id){cryptTalkBase(id)};
 const cryptNewGameBase=newGame;
 newGame=function(){cryptNewGameBase();allCharacters().forEach(setupProgress);render();autoSave()};
 render();
+</script><style>
+@media(min-width:900px){body{max-width:1500px;margin:auto}main{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(340px,1fr);gap:18px}#world{max-height:65vh;object-fit:contain}#controls{max-width:340px;margin:12px auto}#battleUI .actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:899px){body{width:100%;overflow-x:hidden}main{display:flex;flex-direction:column;padding:8px;gap:9px}#world{width:100%;height:auto;max-width:100%}#controls{max-width:360px;margin:8px auto 15px}#controls button{min-height:52px;font-size:20px}#battleActions button{min-height:62px}}
+#expPlanner,#forgePanel{border:1px solid #7890bb;border-radius:10px;padding:12px;margin:10px 0;background:#172441}
+#expPlanner select,#expPlanner input{max-width:100%;min-height:38px}
+.exp-warning{color:#ffbb89;font-weight:700}
+.forge-item{padding:9px;border:1px solid #ffffff30;border-radius:8px;margin:8px 0}
+.rarity-gray{color:#c2c2c2}.rarity-green{color:#83e09b}.rarity-blue{color:#83bcff}.rarity-gold{color:#ffdc75}.rarity-red{color:#ff8787}
+</style>
+<script>
+items.golemshard={name:'Golem Temper Shard',type:'item'};
+const EQUIP_RARITIES=['gray','green','blue','gold','red'],EQUIP_KEYS=['atk','def','hp','spd','crit'],EQUIP_BASE={atk:2,def:2,hp:10,spd:4,crit:1};
+function forgeSetup(){if(!state)return;state.equipmentCatalog||={};state.nextEquipmentId||=1;Object.assign(items,state.equipmentCatalog)}
+function makeEquipment(id){forgeSetup();const base=items[id];if(!base||!['weapon','armor','accessory'].includes(base.type)||base.instance)return id;
+const roll=Math.random(),rank=roll<.34?0:roll<.60?1:roll<.81?2:roll<.95?3:4;
+const pool=[...EQUIP_KEYS],substats={};
+for(let n=0;n<=rank;n++){const k=pool.splice(Math.floor(Math.random()*pool.length),1)[0];substats[k]=EQUIP_BASE[k]*(rank+1)*(1+Math.floor(Math.random()*3))}
+const uid='forge_'+state.nextEquipmentId++,item={...base,name:base.name+' ['+EQUIP_RARITIES[rank].toUpperCase()+']',rarity:EQUIP_RARITIES[rank],upgrade:0,substats,instance:true,baseId:id};
+state.equipmentCatalog[uid]=item;items[uid]=item;return uid}
+const forgeGainBase=gain;
+gain=function(id){forgeSetup();if(items[id]&&['weapon','armor','accessory'].includes(items[id].type)&&!items[id].instance)id=makeEquipment(id);forgeGainBase(id)};
+const forgeStatsBase=stats;
+stats=function(p){forgeSetup();const s=forgeStatsBase(p);for(const id of Object.values(p.gear||{})){const it=items[id];if(!it?.instance)continue;for(const [k,v] of Object.entries(it.substats||{})){if(k==='hp')s.maxhp+=v;else if(k==='crit')s.crit=(s.crit||.05)+v/100;else s[k]=(s[k]||0)+v}}return s};
+function forgeUpgrade(id){if(battle)return;forgeSetup();const it=items[id];if(!it?.instance||it.upgrade>=15)return;const cost=it.upgrade>=10?3:it.upgrade>=5?2:1;if(count('golemshard')<cost||state.gold<cost*20)return;
+consume('golemshard',cost);state.gold-=cost*20;it.upgrade++;
+const keys=Object.keys(it.substats),unused=EQUIP_KEYS.filter(k=>!keys.includes(k));
+let k;if(it.upgrade%3===0&&unused.length){k=unused[Math.floor(Math.random()*unused.length)];it.substats[k]=EQUIP_BASE[k]*(EQUIP_RARITIES.indexOf(it.rarity)+1)}
+else{k=keys[Math.floor(Math.random()*keys.length)];it.substats[k]+=EQUIP_BASE[k]*(it.upgrade%3===0?2:1)}
+note(it.name+' enhanced to +'+it.upgrade);render();autoSave()}
 </script></body></html>
