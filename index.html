@@ -930,4 +930,39 @@ html+='<div class="forge-item"><b class="rarity-'+it.rarity+'">'+it.name+' +'+it
 });panel.innerHTML=html;
 };
 render();
+</script><script>
+/* Turn-scoped ultimate actions: the displayed ultimate always belongs to the actor. */
+function currentUltimateName(p){
+if(!p)return 'Ultimate';
+if(p.id==='kael')return 'Oathbreaker';
+if(p.id==='lilia'||p.cl==='Priestess')return 'Miracle Bloom';
+if(p.id==='seren'||p.cl==='Bard')return 'Grand Chorus';
+if(p.cl==='Mage')return 'Astral Cataclysm';
+if(p.cl==='Rogue')return 'Shadow Tempest';
+return 'Heroic Onslaught';
+}
+const turnScopedUltimateBase=ultimate;
+ultimate=function(pid){
+if(!battle||battle.turn!==pid)return;
+turnScopedUltimateBase(pid);
+};
+const turnScopedRenderBase=render;
+render=function(){
+turnScopedRenderBase();
+if(!battle)return;
+const actor=members().find(p=>p.id===battle.turn);
+const root=document.getElementById('battleActions');
+if(!root)return;
+root.querySelectorAll('button').forEach(button=>{
+if(button.textContent.includes('Ultimate'))button.remove();
+});
+if(!actor)return;
+const button=document.createElement('button');
+button.textContent='✨ '+actor.name+' — '+currentUltimateName(actor)+' (100 Energy)';
+button.disabled=actor.energy<100||actor.hp<=0;
+button.title=actor.energy<100?'Requires 100 Energy':'Use '+actor.name+' ultimate';
+button.addEventListener('click',()=>ultimate(actor.id));
+root.appendChild(button);
+};
+render();
 </script></body></html>
