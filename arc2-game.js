@@ -24,8 +24,9 @@ autoSave();
 }
 function go(zone,x,y){
 if(!A.places[zone]&&!WORLD_PLACES[zone])return;
+const previousZone=state.zone;
 state.zone=zone;state.x=x;state.y=y;
-if(zone==='sunshore'||zone==='saltcave'||zone==='abyssalheart'){arc().bosses[zone+'Visit']=false;ensureMobs(zone)}
+if(zone==='sunshore'||zone==='saltcave'||zone==='abyssalheart'){if(previousZone!==zone)arc().bosses[zone+'Visit']=false;ensureMobs(zone)}
 trackVisit();note('Arrived at '+(A.places[zone]?.name||WORLD_PLACES[zone].name));render();autoSave();
 }
 const oldMove=move;
@@ -43,7 +44,7 @@ if(nx===19&&ny===6){go('saltcave',1,6);if(arc().chapter===4)chapter(5);return}
 }
 if(z==='saltcave'){
 if(nx===0&&ny===6){go('sunshore',18,6);return}
-if(nx===19&&ny===6){if(arc().chapter<7){note('The drowned gate is sealed. Discover the truth of the Compact first.');return}go('abyssalheart',1,6);if(arc().chapter===7)chapter(8);return}
+if(nx===19&&ny===6){if(arc().chapter<7||!arc().bosses.heraldDefeated){note('The drowned gate is sealed. Defeat the Abyssal Herald and uncover the Compact first.');return}go('abyssalheart',1,6);if(arc().chapter===7)chapter(8);return}
 }
 if(z==='abyssalheart'&&nx===0&&ny===6){go('saltcave',18,6);return}
 if(NEW_ZONES.includes(z)){
@@ -136,6 +137,7 @@ if(a.chapter===3){scene('Mayor Corven — The Broken Compact','<p>“Three stran
 if(a.chapter===4&&!a.choices.festival){
 scene('Chapter XI — The Festival of Borrowed Names','<p>The mayor holds a ledger full of names crossed out in seawater. “If I publish this, the town may riot. If I burn it, the dead vanish again.”</p><p>Pippa begs for the truth. Brann asks whether the living can bear it. Selene says a hidden wound never heals.</p><button onclick="arc2Festival(\'reveal\')">Reveal the ledger</button><button onclick="arc2Festival(\'protect\')">Protect the town for now</button>');return}
 if(a.chapter===6&&!a.choices.compact){
+if(!a.choices.keeper){scene('Mayor Corven','<p>“Speak to Keeper Vael at the lighthouse. His lens contains the testimony I cannot give you.”</p>');return}
 scene('Chapter XIII — The Price of Safe Passage','<p>Mayor Corven finally confesses: his family has guarded the Tidebound Compact for generations. Their ancestors bargained away the fleet’s memories to escape the falling star. Each generation inherited the debt without knowing its origin.</p><p>“Tell them I was a coward,” he says, “or let me help make it right.”</p><button onclick="arc2Compact(\'confess\')">Ask the mayor to confess publicly</button><button onclick="arc2Compact(\'repair\')">Help him restore the stolen records first</button>');return}
 menuFor('mayor');
 }
@@ -168,7 +170,17 @@ if(id==='mayor')mayorTalk();else if(id==='merchant')apothecary();else if(id==='s
 return;
 }
 if(state.zone==='saltcave'&&arc().chapter===5){
-if(Math.abs(state.x-10)+Math.abs(state.y-4)<=3){const a=arc();if(!a.choices.cavePearls){a.choices.cavePearls=3;state.inv.echopearl=(state.inv.echopearl||0)+3;note('Recovered three Echo Pearls from the singing saltglass.');chapter(6)}else note('The saltglass remembers your touch.');render();autoSave();return}
+const crystals=[[6,3],[10,4],[14,9]];
+const index=crystals.findIndex(([x,y])=>Math.abs(state.x-x)+Math.abs(state.y-y)<=2);
+if(index>=0){
+const a=arc();a.choices.caveCrystals||={};
+if(!a.choices.caveCrystals[index]){
+a.choices.caveCrystals[index]=true;state.inv.echopearl=(state.inv.echopearl||0)+1;
+note('Recovered Echo Pearl '+Object.keys(a.choices.caveCrystals).length+'/3 from singing saltglass.');
+if(Object.keys(a.choices.caveCrystals).length===3)chapter(6);
+}else note('This saltglass crystal has already surrendered its memory.');
+render();autoSave();return;
+}
 }
 if(NEW_ZONES.includes(state.zone)){note('The salt wind carries distant voices. Look for a person or a marked place.');return}
 oldInteract();
@@ -215,7 +227,7 @@ state.inv[id]=(state.inv[id]||0)+1;rewards++;
 if(Math.random()<.26&&t!=='leviathan'){const gear=Object.keys(A.gear);gain(gear[Math.floor(Math.random()*gear.length)])}
 }
 if(type==='reefbreaker'){state.inv.reefcrest=(state.inv.reefcrest||0)+2;if(a.chapter===3){chapter(4)}}
-if(type==='herald'){state.inv.abyssfang=(state.inv.abyssfang||0)+3;note('The Herald falls. The drowned gate opens.')}
+if(type==='herald'){a.bosses.heraldDefeated=true;state.inv.abyssfang=(state.inv.abyssfang||0)+3;note('The Herald falls. The drowned gate opens.')}
 if(type==='leviathan'){
 const cores=4+Math.floor(Math.random()*4);state.inv.leviathancore=(state.inv.leviathancore||0)+cores;
 if(a.chapter===8&&!a.choices.ending)finale();
