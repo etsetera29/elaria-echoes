@@ -110,7 +110,7 @@ const a=arc(),q=A.sideStories.find(s=>s.id===id);if(!a||!q)return;
 if(a.chapter<q.start){note('This side story is not yet available.');return}
 const progress=a.side[id]||0;
 if(progress===0){a.side[id]=1;scene('Side Story: '+q.name,'<p>'+q.steps[0]+'</p><p><b>Return to this character to investigate further.</b></p>')}
-else if(progress===1){a.side[id]=2;scene('Side Story: '+q.name,'<p>'+q.steps[1]+'</p><p>What will you do?</p><button onclick="arc2SideFinish(\''+id+'\',0)">'+q.choices[0][0]+'</button><button onclick="arc2SideFinish(\''+id+'\',1)">'+q.choices[1][0]+'</button>')}
+else if(progress===1){a.side[id]=2;scene('Side Story: '+q.name,'<p>'+q.steps[1]+'</p><p>What will you do?</p><button onclick="arc2SideFinish(\''+id+'\',0)">'+q.choices[0][0]+'</button><button onclick="arc2SideFinish(\''+id+'\',1)">'+q.choices[0][1]+'</button>')}
 else scene('Side Story Complete: '+q.name,'<p>'+q.ends[a.choices['side_'+id]||0]+'</p>');
 autoSave();
 }
